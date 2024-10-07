@@ -19,6 +19,20 @@ def create_table():
                 )""")
     conn.close()
 
+def create_profile_table(table_name):
+    c = conn.cursor()
+    c.execute(f"""CREATE TABLE {table_name} (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                datetime TEXT,
+                post TEXT,
+                img_link TEXT,
+                img_alt TEXT,
+                reacts INTEGER,
+                comments INTEGER,
+                shares INTEGER
+                )""")
+    conn.close()
+
 def insert_to_table(table_name, year, date, article_title, article, wordcount, pagenum, url):
     c = conn.cursor()
     with conn:
@@ -154,6 +168,6 @@ def add_column(table_name, column_name, column_type):
 # csv_to_sqlite(os.path.join(BASE_DIR, "data", "IPP_v1.csv"), "ipplist")
 # rename_column_names_to_lowercase("ipplist")
 # add_column("ipplist", "flag", "INTEGER")
-data = fetch_new_profile("facebook")
-print(data)
+# data = fetch_new_profile("facebook")
+# print(data)
 

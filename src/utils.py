@@ -1,7 +1,8 @@
-import os, requests, sys, re, psutil, subprocess
+import os, requests, sys, re, psutil, subprocess, time
 from bs4 import BeautifulSoup
 from datetime import datetime
 from concurrent.futures import ThreadPoolExecutor
+from tqdm import tqdm
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
@@ -21,42 +22,48 @@ def is_firefox_running():
     return False
 
 def int_from_string(input_string):
-    integers = re.findall(r'\d+', input_string)
-    if not integers:
-        return None
-    extracted_int = int(integers[0])
-    return extracted_int
+    input_string = input_string.replace(',', '')  # remove commas
+    match = re.search(r'(\d+(?:\.\d+)?)(K|M|B)?', input_string)
+    if match:
+        value = float(match.group(1))
+        suffix = match.group(2)
+        if suffix == 'K':
+            value *= 1000
+        elif suffix == 'M':
+            value *= 1000000
+        elif suffix == 'B':
+            value *= 1000000000
+        return int(value)
+    else:
+        integers = re.findall(r'\d+', input_string)
+        if not integers:
+            return None
+        return int(integers[0])
 
 def retain_specific_classes(page_html, specified_classes):
-    # Parse the HTML content
     soup = BeautifulSoup(page_html, 'html.parser')
 
-    # Find all elements with specified classes
     elements_to_retain = soup.find_all(class_=specified_classes)
-
     print(elements_to_retain)
     
-    # Remove all classes from the elements except the specified ones
     for element in elements_to_retain:
         classes_to_keep = set(element.get('class', [])) & set(specified_classes)
         element['class'] = classes_to_keep
 
-    # Remove all other elements
     elements_to_remove = [element for element in soup.find_all() if element not in elements_to_retain]
     for element in elements_to_remove:
         element.decompose()
 
-    # Convert the modified soup back to HTML string
     modified_html = soup.prettify()
-
     return modified_html
 
+def parse_facebook_date(date_str):
+    date_format = "%A %d %B %Y at %H:%M"
+    return datetime.strptime(date_str, date_format)
+
 def compare_dates(date_str1, date_str2):
-    # Parse the dates
     date1 = datetime.strptime(date_str1, "%A, %b %d, %Y")
     date2 = datetime.strptime(date_str2, "%m/%d/%Y")
-    
-    # Compare the dates
     return date1.date() == date2.date()
 
 def load_info(file_path):
@@ -103,7 +110,7 @@ def download_images(image_urls, folder_path):
             filename = os.path.join(folder_path, f"article_{i}.jpg")
             executor.submit(download_image, url, filename, i)
         print(f"{len(image_urls)} articles downloaded")
-    #     sys.stdout.write(f"{len(image_urls)} articles")
+    # sys.stdout.write(f"{len(image_urls)} articles")
     # sys.stdout.write("\033[K")  
     # sys.stdout.write("\033[F")  
     # sys.stdout.write("\033[K")
@@ -113,15 +120,12 @@ def convert_datestr_to_var(selected_date):
     return day, month, year
 
 def validate_date(date_str):
-    # Define a regular expression pattern for the dd/mm/yyyy format
     date_pattern = r"\d{2}/\d{2}/\d{4}"
     
-    # Check if the date string matches the pattern
     if not re.match(date_pattern, date_str):
         return False, "Invalid date format. Please use the format dd/mm/yyyy."
     else:
         try:
-            # Parse the date string using the expected format
             datetime.strptime(date_str, "%d/%m/%Y")
             return True, None  # Date is valid
         except ValueError:
@@ -150,3 +154,20 @@ def is_open(driver, url):
         return True
     else:
         return False
+    
+def loading(i, total):
+    progress = (i / total) * 100
+    sys.stdout.write('\r')
+    sys.stdout.write("Poke Progress: | %-50s | %0.2f%% (%d poked)" % ('█' * int(progress/2), progress, i))
+    sys.stdout.flush()
+
+def wait(duration):
+    num_iterations = 100
+    time_interval = (duration-1) / num_iterations
+
+    with tqdm(total=num_iterations, desc="Loading", unit="iteration", ncols=100) as pbar:
+        for _ in range(num_iterations):
+            time.sleep(time_interval)
+            pbar.update(1)
+    print("\n")
+    
