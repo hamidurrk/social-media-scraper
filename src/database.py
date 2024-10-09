@@ -20,24 +20,94 @@ def create_table():
     conn.close()
 
 def create_profile_table(table_name):
+    table_name = ''.join(e for e in table_name if e.isalpha()).lower()
     c = conn.cursor()
     c.execute(f"""CREATE TABLE {table_name} (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 datetime TEXT,
-                post TEXT,
+                post_text TEXT,
                 img_link TEXT,
                 img_alt TEXT,
-                reacts INTEGER,
+                img_tag TEXT,
                 comments INTEGER,
-                shares INTEGER
+                shares INTEGER,
+                all_reacts INTEGER,
+                like INTEGER,
+                love INTEGER,
+                care INTEGER,
+                haha INTEGER,
+                sad INTEGER,
+                angry INTEGER
                 )""")
     conn.close()
+    print(f"Table {table_name} created successfully")
 
-def insert_to_table(table_name, year, date, article_title, article, wordcount, pagenum, url):
+def insert_to_table(
+    table_name, 
+    datetime,
+    post_text,
+    img_link,
+    img_alt,
+    img_tag,
+    comments,
+    shares,
+    all_reacts,
+    like,
+    love,
+    care,
+    haha,
+    sad,
+    angry):
+    table_name = ''.join(e for e in table_name if e.isalpha()).lower()
     c = conn.cursor()
     with conn:
-        c.execute(f"INSERT INTO {table_name} (year, date, article_title, article, wordcount, pagenum, url) VALUES (?, ?, ?, ?, ?, ?, ?)", 
-                (year, date, article_title, article, wordcount, pagenum, url))
+        c.execute(f"""INSERT INTO {table_name} (
+            datetime,
+            post_text,
+            img_link,
+            img_alt,
+            img_tag,
+            comments,
+            shares,
+            all_reacts,
+            like,
+            love,
+            care,
+            haha,
+            sad,
+            angry
+            ) VALUES (
+            ?,
+            ?,
+            ?,
+            ?,
+            ?,
+            ?,
+            ?,
+            ?,
+            ?,
+            ?,
+            ?,
+            ?,
+            ?,
+            ?
+            )
+            """, (
+            datetime,
+            post_text,
+            img_link,
+            img_alt,
+            img_tag,
+            comments,
+            shares,
+            all_reacts,
+            like,
+            love,
+            care,
+            haha,
+            sad,
+            angry
+            ))
     print(f"Data inserted to {table_name} successfully")
 
 def delete_all_rows(table_name):
@@ -62,11 +132,17 @@ def fetch_new_profile(column_name):
     c.execute(f"SELECT {column_name} FROM ipplist WHERE flag IS NULL LIMIT 1")
     return c.fetchone()[0]
 
+def remove_last_n_rows(table_name, n):
+    c = conn.cursor()
+    with conn:
+        c.execute(f"DELETE FROM {table_name} WHERE id IN (SELECT id FROM {table_name} ORDER BY id DESC LIMIT {n})")
+    print(f"{n} rows deleted from {table_name}")
+
 def remove_rows_below_wordcount_threshold(table_name, wordcount_threshold):
     conn = sqlite3.connect(DATABASE_PATH)
     c = conn.cursor()
 
-    query = f"DELETE FROM {table_name} WHERE wordcount < ?"
+    query = f"DELETE FROM {table_name} WHERE all_reacts < ?"
     
     try:
         c.execute(query, (wordcount_threshold,))
@@ -170,4 +246,7 @@ def add_column(table_name, column_name, column_type):
 # add_column("ipplist", "flag", "INTEGER")
 # data = fetch_new_profile("facebook")
 # print(data)
+# create_profile_table("Bharatiya Janata Party (BJP)")
 
+# remove_rows_below_wordcount_threshold("bharatiyajanatapartybjp", 1)
+# remove_last_n_rows("bharatiyajanatapartybjp", 3)

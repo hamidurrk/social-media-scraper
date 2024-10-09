@@ -1,17 +1,18 @@
 from selenium import webdriver
-import time, sqlite3, sys, os, re, json
-import sqlite3
-import sys
+import time, sqlite3, sys, os, hashlib
 from webdriver_manager.firefox import GeckoDriverManager
 from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.common.action_chains import ActionChains
-from tqdm import tqdm
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
+from selenium.webdriver.common.by import By
 from datetime import datetime
 from utils import *
 from database import *
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 DATABASE_PATH = os.path.join(BASE_DIR, "data", "dbfiles",'ipp.db')
+IMAGE_DOWNLOAD_PATH = os.path.join(BASE_DIR, "data", "img")
 conn = sqlite3.connect(DATABASE_PATH)
 
 class FacebookProfileScraper:
@@ -60,11 +61,17 @@ class FacebookProfileScraper:
         
     def navigate_to_profile(self, name, url):
         bot = self.bot
-        bot.get(url)
+        if not url in bot.current_url:
+            bot.get(url)
         gen_prompt("Navigating to " + name, char="#")
         wait(2)
-        
-    def crawl_timeline(self, year: int, month: int, day: int):
+    
+    def get_last_datetime(self, table_name):
+        c = conn.cursor()
+        c.execute(f"SELECT datetime FROM {table_name} ORDER BY id DESC LIMIT 1")
+        return c.fetchall()[0][0]
+    
+    def crawl_timeline(self, start_date_obj, end_date_obj):
         bot = self.bot
         error_count = 0
         i = 0
@@ -95,6 +102,8 @@ class FacebookProfileScraper:
                 share_str = f"/html/body/div[1]/div/div/div[1]/div/div[3]/div/div/div[1]/div[1]/div/div/div[4]/div[2]/div/div[2]/div[{j}]/div[{i}]/div/div/div/div/div/div/div/div/div/div/div[13]/div/div/div[4]/div/div/div/div/div[1]/div/div[2]/div[3]/span/div/span/span"
                 share_str_2 = f"/html/body/div[1]/div/div/div[1]/div/div[3]/div/div/div[1]/div[1]/div/div/div[4]/div[2]/div/div[2]/div[{j}]/div[{i}]/div/div/div/div/div/div/div/div/div/div/div[13]/div/div/div[4]/div/div/div[1]/div/div[1]/div/div[2]/div[2]/span/div/span/span"
                 comment_str_2 = f"/html/body/div[1]/div/div/div[1]/div/div[3]/div/div/div[1]/div[1]/div/div/div[4]/div[2]/div/div[2]/div[{j}]/div[{i}]/div/div/div/div/div/div/div/div/div/div/div[13]/div/div/div[4]/div/div/div[1]/div/div[1]/div/div[2]/div[1]/span/div/span/span"
+                react_pop_up = "/html/body/div[1]/div/div/div[1]/div/div[4]/div/div/div[1]/div/div[2]/div/div/div/div/div/div/div[1]/div/div[1]/div/div/div/div[2]"
+                react_pop_up_close = "/html/body/div[1]/div/div/div[1]/div/div[4]/div/div/div[1]/div/div[2]/div/div/div/div/div/div/div[1]/div/div[2]/div"
                 
                 anchor_scroll_element = bot.find_element_by_xpath(anchor_scroll)
                 bot.execute_script("window.scrollBy(0, arguments[0].getBoundingClientRect().top - 150);", anchor_scroll_element)
@@ -107,93 +116,189 @@ class FacebookProfileScraper:
                     
                     date_hover_box_element = bot.find_element_by_xpath(date_hover_box)
                     post_date = date_hover_box_element.text
-                    print(post_date)
                 except:
                     print("No date found")
-
-                post_date_obj = parse_facebook_date(post_date)
-
-                comparison_date_obj = datetime(year, month, day)
+                    pass
                 
-                if not post_date_obj >= comparison_date_obj:
+                post_date_obj = parse_facebook_date(post_date)
+                
+                if post_date_obj > start_date_obj:
+                    print("Post already scraped: ", post_date_obj)
+                    continue
+                if not post_date_obj >= end_date_obj:
                     break
                 
                 try:
                     post_element = bot.find_element_by_xpath(post_box)
                     child_divs = post_element.find_elements_by_xpath('.//div')
                     if child_divs:
-                        texts = []
+                        post_texts = []
                         see_more_button = None
                         for div in child_divs:
                             text = div.text.strip()
-                            if text and text not in texts:
-                                texts.append(text)
+                            if text and text not in post_texts:
+                                post_texts.append(text)
                             if div.get_attribute('role') == 'button' and text == 'See more':
                                 see_more_button = div
                         if see_more_button:
                             see_more_button.click()
-                            texts = []
+                            post_texts = []
                             see_more_button = None
                             for div in child_divs:
                                 text = div.text.strip()
-                                if text and text not in texts:
-                                    texts.append(text)
-                                print(texts[0])
-                        else:
-                            print(texts[0])
+                                if text and text not in post_texts:
+                                    post_texts.append(text)
                     else:
                         print("No text found")
+                        pass
                 except:
                     print("No text found")
+                    pass
                 
-                img_src = None
+                img_src_list = []
+                img_alt_list = []
                 try:
                     img_element = bot.find_element_by_xpath(img_box)
                     img_tag = img_element
                     img_src = img_tag.get_attribute('src')
                     img_alt = img_tag.get_attribute('alt')
-                    print(f"Image found: src={img_src}\nalt={img_alt}")
+                    if img_src is not None and img_alt is not None:
+                        img_src_list.append(img_src)
+                        img_alt_list.append(img_alt)
                 except Exception as e:
-                    # print("An error occurred: ", str(e))
-                    if img_src == None:
+                    if img_src_list == []:
                         img_elements = bot.find_elements_by_xpath(img_box_2 + "//img")
                         for img_element in img_elements:
                             img_src = img_element.get_attribute('src')
                             img_alt = img_element.get_attribute('alt')
-                            print(f"Image found: src={img_src}\nalt={img_alt}")
-                    
+                            img_src_list.append(img_src)
+                            img_alt_list.append(img_alt)
                     print("No image found")
-                    
-                
-                try:
-                    # print(bot.find_element_by_xpath(react_str).text)
-                    reacts = int_from_string(bot.find_element_by_xpath(react_str).text)
-                    if (reacts != None):
-                        print ("\nReacts: "+ str(reacts))
-                        if reacts > 999:
-                            K_EXISTS = True
-                except Exception as e:
-                    print("\nReacts: 0")
-                
-                if K_EXISTS:
-                    # comment_str = comment_str_2
-                    # share_str = share_str_2
                     pass
+                
+                img_tags = []
                 try:
-                    # print(bot.find_element_by_xpath(comment_str).text)
+                    for url in img_src_list:
+                        hash_object = hashlib.sha256(url.encode())
+                        time.sleep(0.5)
+                        filename = hash_object.hexdigest() + ".jpg"
+                        img_tags.append(filename)
+                except Exception as e:
+                    print("An error occurred: ", str(e))
+                    pass
+                    
+                download_images(img_src_list, IMAGE_DOWNLOAD_PATH, img_tags)
+                
+                # try:
+                #     reacts = int_from_string(bot.find_element_by_xpath(react_str).text)
+                #     if (reacts != None):
+                #         print ("\nReacts: "+ str(reacts))
+                #         if reacts > 999:
+                #             K_EXISTS = True
+                # except Exception as e:
+                #     print("\nReacts: 0")
+                #     pass
+                
+                try:
                     comments = int_from_string(bot.find_element_by_xpath(comment_str).text)
                     if (comments != None):
-                        print ("Comments: "+ str(comments))
+                        # print ("Comments: "+ str(comments))
+                        pass
                 except Exception as e:
-                    print("Comments: 0")
+                    # print("Comments: 0")
+                    pass
 
                 try:
-                    # print(bot.find_element_by_xpath(share_str).text)
                     shares = int_from_string(bot.find_element_by_xpath(share_str).text)
                     if (shares != None):
-                        print ("Shares: "+ str(shares))
+                        # print ("Shares: "+ str(shares))
+                        pass
                 except Exception as e:
-                    print("Shares: 0")
+                    # print("Shares: 0")
+                    pass
+                
+                reactions = {
+                    "All": 0,
+                    "Like": 0,
+                    "Love": 0,
+                    "Care": 0,
+                    "Haha": 0,
+                    "Wow": 0,
+                    "Sad": 0,
+                    "Angry": 0
+                }
+                
+                try:
+                    bot.find_element_by_xpath(react_str).click()
+                    WebDriverWait(bot, 10).until(
+                        EC.presence_of_element_located((By.XPATH, f"{react_pop_up}"))
+                    )
+                    time.sleep(1)
+                    react_pop_up_element = bot.find_element_by_xpath(react_pop_up)
+                    
+                    child_elements = react_pop_up_element.find_elements_by_xpath('.//div')
+                    
+                    for child in child_elements:
+                        aria_label = child.get_attribute("aria-label")
+                        if not aria_label == None:
+                            reaction, count = aria_label.split(", ")
+                            reactions[reaction] = int_from_string(count)
+                    bot.find_element_by_xpath(react_pop_up_close).click()
+                except Exception as e:
+                    print("An error occurred: ", str(e))
+                
+                print("\n"*2)
+                print("Date of post: ", post_date, 
+                      "Post content: ", post_texts, 
+                      "Image: ", img_src_list, 
+                      "Image Summary: ", img_alt_list, 
+                      "Image Tag: ",img_tags, 
+                      "Comments: ", comments, 
+                      "Shares: ", shares, 
+                      "All Reacts: ", reactions["All"], 
+                      "Like: ", reactions["Like"], 
+                      "Love: ", reactions["Love"], 
+                      "Care: ", reactions["Care"], 
+                      "Haha: ", reactions["Haha"], 
+                      "Wow: ", reactions["Wow"], 
+                      "Sad: ", reactions["Sad"], 
+                      "Angry: ", reactions["Angry"], 
+                      sep="\n")
+                
+                data = {
+                    'datetime': post_date,
+                    'post_text': ', '.join(post_texts),
+                    'img_link': ', '.join(img_src_list),  
+                    'img_alt': ', '.join(img_alt_list),  
+                    'img_tag': ', '.join(img_tags),  
+                    'comments': comments,
+                    'shares': shares,
+                    'all_reacts': reactions["All"],
+                    'like': reactions["Like"],
+                    'love': reactions["Love"],
+                    'care': reactions["Care"],
+                    'haha': reactions["Haha"],
+                    'sad': reactions["Sad"],
+                    'angry': reactions["Angry"]
+                }
+                
+                insert_to_table("Bharatiya Janata Party (BJP)",
+                                datetime=data['datetime'],
+                                post_text=data['post_text'],
+                                img_link=data['img_link'],
+                                img_alt=data['img_alt'],
+                                img_tag=data['img_tag'],
+                                comments=data['comments'],
+                                shares=data['shares'],
+                                all_reacts=data['all_reacts'],
+                                like=data['like'],
+                                love=data['love'],
+                                care=data['care'],
+                                haha=data['haha'],
+                                sad=data['sad'],
+                                angry=data['angry'])
+                
+                wait(1)
             
             except Exception as e:
                 print("An error occurred: ", str(e))
@@ -205,15 +310,18 @@ class FacebookProfileScraper:
         print("\n"*2)
         gen_prompt("Summary")
         print(f"Number of new entries to the database: {i}")
-        # print(f"Size of database: {len(memory_list)}")
         print("\n"*2)
+        
+    def main(self, year, month, day):
+        start_datetime_obj = parse_facebook_date(self.get_last_datetime("bharatiyajanatapartybjp"))
+        end_datetime_obj = datetime(year, month, day)
+        name, url = fetch_new_profile("name"), fetch_new_profile("facebook")
+        self.navigate_to_profile(name, url)
+        self.crawl_timeline(start_date_obj=start_datetime_obj, end_date_obj=end_datetime_obj)
               
 with open("C:\\Users\\hamid\\OneDrive\\Documents\\credential.txt", 'r', encoding='utf-8') as f:
     password = f.read()
 
-scraper = FacebookProfileScraper('hrk.sahil', password, browser_type=1)
-
-# scraper.login()
-scraper.crawl_timeline(year=2024, month=10, day=3)
-# scraper.poke()
-
+if __name__ == "__main__":
+    scraper = FacebookProfileScraper('hrk.sahil', password, browser_type=1)
+    scraper.main(2010, 5, 30)
