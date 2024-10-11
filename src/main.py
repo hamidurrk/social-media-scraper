@@ -61,7 +61,7 @@ class FacebookProfileScraper:
         
     def navigate_to_profile(self, name, url):
         bot = self.bot
-        if not url in bot.current_url:
+        if not url == bot.current_url:
             bot.get(url)
         gen_prompt("Navigating to " + name, char="#")
         wait(2)
@@ -107,12 +107,12 @@ class FacebookProfileScraper:
                 
                 anchor_scroll_element = bot.find_element_by_xpath(anchor_scroll)
                 bot.execute_script("window.scrollBy(0, arguments[0].getBoundingClientRect().top - 150);", anchor_scroll_element)
-                time.sleep(1)
+                time.sleep(2)
                 
                 try:
                     hover = ActionChains(bot).move_to_element(bot.find_element_by_xpath(date_hover_element))
                     hover.perform()
-                    time.sleep(1.5)
+                    time.sleep(2)
                     
                     date_hover_box_element = bot.find_element_by_xpath(date_hover_box)
                     post_date = date_hover_box_element.text
@@ -303,9 +303,9 @@ class FacebookProfileScraper:
             except Exception as e:
                 print("An error occurred: ", str(e))
                 error_count += 1
-                if error_count >= 10:
-                    break
-                pass
+                # if error_count >= 10:
+                #     break
+                continue
         gen_prompt("Crawl ended", char="#")
         print("\n"*2)
         gen_prompt("Summary")
