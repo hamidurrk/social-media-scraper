@@ -74,7 +74,7 @@ class FacebookProfileScraper:
     def crawl_timeline(self, start_date_obj, end_date_obj):
         bot = self.bot
         error_count = 0
-        i = 0
+        i = 140
         
         while True:
             try:
@@ -107,6 +107,11 @@ class FacebookProfileScraper:
                 
                 anchor_scroll_element = bot.find_element_by_xpath(anchor_scroll)
                 bot.execute_script("window.scrollBy(0, arguments[0].getBoundingClientRect().top - 150);", anchor_scroll_element)
+                
+                # if i < 350:
+                #     time.sleep(2)
+                #     continue
+                
                 time.sleep(2)
                 
                 try:
@@ -116,11 +121,12 @@ class FacebookProfileScraper:
                     
                     date_hover_box_element = bot.find_element_by_xpath(date_hover_box)
                     post_date = date_hover_box_element.text
+                    post_date_obj = parse_facebook_date(post_date)
                 except:
-                    print("No date found")
+                    print("Date invalid. Maybe not hoverable.")
+                    post_date = bot.find_element_by_xpath(date_hover_element).text
                     pass
                 
-                post_date_obj = parse_facebook_date(post_date)
                 
                 if post_date_obj > start_date_obj:
                     print("Post already scraped: ", post_date_obj)
@@ -282,29 +288,29 @@ class FacebookProfileScraper:
                     'angry': reactions["Angry"]
                 }
                 
-                insert_to_table("Bharatiya Janata Party (BJP)",
-                                datetime=data['datetime'],
-                                post_text=data['post_text'],
-                                img_link=data['img_link'],
-                                img_alt=data['img_alt'],
-                                img_tag=data['img_tag'],
-                                comments=data['comments'],
-                                shares=data['shares'],
-                                all_reacts=data['all_reacts'],
-                                like=data['like'],
-                                love=data['love'],
-                                care=data['care'],
-                                haha=data['haha'],
-                                sad=data['sad'],
-                                angry=data['angry'])
+                # insert_to_table("Bharatiya Janata Party (BJP)",
+                #                 datetime=data['datetime'],
+                #                 post_text=data['post_text'],
+                #                 img_link=data['img_link'],
+                #                 img_alt=data['img_alt'],
+                #                 img_tag=data['img_tag'],
+                #                 comments=data['comments'],
+                #                 shares=data['shares'],
+                #                 all_reacts=data['all_reacts'],
+                #                 like=data['like'],
+                #                 love=data['love'],
+                #                 care=data['care'],
+                #                 haha=data['haha'],
+                #                 sad=data['sad'],
+                #                 angry=data['angry'])
                 
                 wait(1)
             
             except Exception as e:
                 print("An error occurred: ", str(e))
                 error_count += 1
-                # if error_count >= 10:
-                #     break
+                if error_count >= 10:
+                    break
                 continue
         gen_prompt("Crawl ended", char="#")
         print("\n"*2)
@@ -319,9 +325,9 @@ class FacebookProfileScraper:
         self.navigate_to_profile(name, url)
         self.crawl_timeline(start_date_obj=start_datetime_obj, end_date_obj=end_datetime_obj)
               
-with open("C:\\Users\\hamid\\OneDrive\\Documents\\credential.txt", 'r', encoding='utf-8') as f:
+with open("C:\\Users\\hamid\\OneDrive\\Documents\\credential.txt", 'r', encoding='utf-8') as f:     # importing password from local machine
     password = f.read()
 
 if __name__ == "__main__":
-    scraper = FacebookProfileScraper('hrk.sahil', password, browser_type=1)
+    scraper = FacebookProfileScraper('hrk.sahil', password, browser_type=1)         # username of the facebook profile
     scraper.main(2010, 5, 30)
