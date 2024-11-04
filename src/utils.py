@@ -165,13 +165,13 @@ def loading(i, total):
     sys.stdout.write("Poke Progress: | %-50s | %0.2f%% (%d poked)" % ('█' * int(progress/2), progress, i))
     sys.stdout.flush()
 
-def wait(duration):
-    num_iterations = 100
-    time_interval = (duration-1) / num_iterations
+# def wait(duration):
+#     num_iterations = 100
+#     time_interval = (duration-1) / num_iterations
 
-    with tqdm(total=num_iterations, desc="Loading", unit="iteration", ncols=100) as pbar:
-        for _ in range(num_iterations):
-            time.sleep(time_interval)
-            pbar.update(1)
-    print("\n")
+#     with tqdm(total=num_iterations, desc="Loading", unit="iteration", ncols=100) as pbar:
+#         for _ in range(num_iterations):
+#             time.sleep(time_interval)
+#             pbar.update(1)
+#     print("\n")
     
