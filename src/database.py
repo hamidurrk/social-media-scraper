@@ -249,4 +249,4 @@ def add_column(table_name, column_name, column_type):
 # create_profile_table("Bharatiya Janata Party (BJP)")
 
 # remove_rows_below_wordcount_threshold("bharatiyajanatapartybjp", 1)
-# remove_last_n_rows("bharatiyajanatapartybjp", 3)
+# remove_last_n_rows("bharatiyajanatapartybjp", 1)
