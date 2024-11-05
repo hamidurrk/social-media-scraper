@@ -69,8 +69,17 @@ class FacebookProfileScraper:
     
     def get_last_datetime(self, table_name):
         c = conn.cursor()
-        c.execute(f"SELECT datetime FROM {table_name} ORDER BY id DESC LIMIT 1")
-        return c.fetchall()[0][0]
+        offset = 0
+        while True:
+            c.execute(f"SELECT datetime FROM {table_name} ORDER BY id DESC LIMIT 1 OFFSET {offset}")
+            row = c.fetchone()
+            if row is None:
+                return None  # return None if no rows are found
+            try:
+                datetime.strptime(row[0], "%Y-%m-%d %H:%M:%S")  # assuming this is the datetime format
+                return row[0]
+            except ValueError:
+                offset += 1
     
     def post_filter(self, filter_element, year: int, month: str, day: int):
         bot = self.bot
@@ -358,8 +367,8 @@ class FacebookProfileScraper:
         print("\n"*2)
         
     def main(self, year, month, day):
-        # start_datetime_obj = parse_facebook_date(self.get_last_datetime("bharatiyajanatapartybjp"))
-        start_datetime_obj = datetime(2024, 9, 17)
+        start_datetime_obj = parse_facebook_date(self.get_last_datetime("bharatiyajanatapartybjp"))
+        # start_datetime_obj = datetime(2024, 1, 20)
         end_datetime_obj = datetime(year, month, day)
         name, url = fetch_new_profile("name"), fetch_new_profile("facebook")
         self.navigate_to_profile(name, url)
