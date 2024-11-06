@@ -1,6 +1,7 @@
 import sqlite3
 import os
 import pandas as pd
+from datetime import datetime
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 DATABASE_PATH = os.path.join(BASE_DIR, "data", "dbfiles",'ipp.db')
@@ -238,7 +239,27 @@ def add_column(table_name, column_name, column_type):
     
     conn.commit()
     conn.close()
-    
+
+
+def get_last_datetime(table_name):
+    c = conn.cursor()
+    offset = 0
+    while True:
+        c.execute(f"SELECT datetime FROM {table_name} ORDER BY id DESC LIMIT 1 OFFSET {offset}")
+        row = c.fetchone()
+        if row[0] != '':
+            print(row[0])
+            return row[0]
+        else:
+            offset += 1
+            print(offset)
+            
+def check_if_datetime_exists(table_name, date):
+    c = conn.cursor()
+    c.execute(f"SELECT * FROM {table_name} WHERE datetime = ?", (date,))
+    return True if c.fetchone() else False
+
+if __name__ == "__main__":
 # create_table()
 # drop_table("ipplist")
 # csv_to_sqlite(os.path.join(BASE_DIR, "data", "IPP_v1.csv"), "ipplist")
@@ -250,3 +271,5 @@ def add_column(table_name, column_name, column_type):
 
 # remove_rows_below_wordcount_threshold("bharatiyajanatapartybjp", 1)
 # remove_last_n_rows("bharatiyajanatapartybjp", 1)
+    # get_last_datetime("bharatiyajanatapartybjp")
+    print(check_if_datetime_exists("bharatiyajanatapartybjp", "Friday 16 June 2023 at 15:29"))

@@ -67,19 +67,6 @@ class FacebookProfileScraper:
         gen_prompt("Navigating to " + name, char="#")
         # wait(2)
     
-    def get_last_datetime(self, table_name):
-        c = conn.cursor()
-        offset = 0
-        while True:
-            c.execute(f"SELECT datetime FROM {table_name} ORDER BY id DESC LIMIT 1 OFFSET {offset}")
-            row = c.fetchone()
-            if row is None:
-                return None  # return None if no rows are found
-            try:
-                datetime.strptime(row[0], "%Y-%m-%d %H:%M:%S")  # assuming this is the datetime format
-                return row[0]
-            except ValueError:
-                offset += 1
     
     def post_filter(self, filter_element, year: int, month: str, day: int):
         bot = self.bot
@@ -174,9 +161,9 @@ class FacebookProfileScraper:
                         pass
                     
                     
-                    # if post_date_obj > start_date_obj:
-                    #     print("Post already scraped: ", post_date_obj)
-                    #     continue
+                    if check_if_datetime_exists("bharatiyajanatapartybjp", post_date):
+                        print("Post already scraped: ", post_date)
+                        continue
                     if not post_date_obj.date() == current_date_obj.date():
                         print(post_date_obj.date(), current_date_obj.date(), "not equal")
                         break
@@ -367,7 +354,7 @@ class FacebookProfileScraper:
         print("\n"*2)
         
     def main(self, year, month, day):
-        start_datetime_obj = parse_facebook_date(self.get_last_datetime("bharatiyajanatapartybjp"))
+        start_datetime_obj = parse_facebook_date(get_last_datetime("bharatiyajanatapartybjp"))
         # start_datetime_obj = datetime(2024, 1, 20)
         end_datetime_obj = datetime(year, month, day)
         name, url = fetch_new_profile("name"), fetch_new_profile("facebook")
