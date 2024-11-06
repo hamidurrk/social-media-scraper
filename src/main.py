@@ -4,7 +4,6 @@ from webdriver_manager.firefox import GeckoDriverManager
 from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.common.action_chains import ActionChains
 from selenium.webdriver.support.ui import WebDriverWait
-from selenium.webdriver.support.ui import Select
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.common.by import By
 from datetime import datetime, timedelta
@@ -54,7 +53,6 @@ class FacebookProfileScraper:
             
             bot.find_element_by_xpath('//*[@id="pass"]').send_keys(Keys.RETURN)
             gen_prompt("Login Requested")
-            # wait(5)
             
             print("\n"*4)
         except:
@@ -65,7 +63,6 @@ class FacebookProfileScraper:
         if not url == bot.current_url:
             bot.get(url)
         gen_prompt("Navigating to " + name, char="#")
-        # wait(2)
     
     
     def post_filter(self, filter_element, year: int, month: str, day: int):
@@ -112,7 +109,6 @@ class FacebookProfileScraper:
                 try:
                     i += 1
                     j = 2
-                    K_EXISTS = False
                     wrt = "Post no: " + str(i) + " "
                     print(wrt.center(70, "-"))
                     
@@ -129,16 +125,13 @@ class FacebookProfileScraper:
                     
                     post_box = f"/html/body/div[1]/div/div/div[1]/div/div[3]/div/div/div[1]/div[1]/div/div/div[4]/div[2]/div/div[2]/div[{j}]/div[{i}]/div/div/div/div/div/div/div/div/div/div/div/div[13]/div/div/div[3]/div[1]/div"
                     anchor_scroll = f"/html/body/div[1]/div/div/div[1]/div/div[3]/div/div/div[1]/div[1]/div/div/div[4]/div[2]/div/div[2]/div[{j}]/div[{i}]/div/div/div/div/div/div/div/div/div/div/div/div[13]/div/div/div[2]/div/div[3]/div/div"
-                    date_hover_element = f"/html/body/div[1]/div/div/div[1]/div/div[3]/div/div/div[1]/div[1]/div/div/div[4]/div[2]/div/div[2]/div[{j}]/div[{i}]/div/div/div/div/div/div/div/div/div/div/div/div[13]/div/div/div[2]/div/div[2]/div/div[2]/span/div/span[1]/span/a"
-                    date_hover_text_element = '//*[@id="SvgT125"]'           
+                    date_hover_element = f"/html/body/div[1]/div/div/div[1]/div/div[3]/div/div/div[1]/div[1]/div/div/div[4]/div[2]/div/div[2]/div[{j}]/div[{i}]/div/div/div/div/div/div/div/div/div/div/div/div[13]/div/div/div[2]/div/div[2]/div/div[2]/span/div/span[1]/span/a"          
                     date_hover_box = f"/html/body/div[1]/div/div/div[1]/div/div[3]/div/div/div[2]/div"
                     img_box = f"/html/body/div[1]/div/div/div[1]/div/div[3]/div/div/div[1]/div[1]/div/div/div[4]/div[2]/div/div[2]/div[{j}]/div[{i}]/div/div/div/div/div/div/div/div/div/div/div/div[13]/div/div/div[3]/div/div[1]/a/div[1]/div/div/div/img"
                     img_box_2 = f"/html/body/div[1]/div/div/div[1]/div/div[3]/div/div/div[1]/div[1]/div/div/div[4]/div[2]/div/div[2]/div[{j}]/div[{i}]/div/div/div/div/div/div/div/div/div/div/div/div[13]/div/div/div[3]/div[2]/div[1]/div/div/div"
                     react_str = f"/html/body/div[1]/div/div/div[1]/div/div[3]/div/div/div[1]/div[1]/div/div/div[4]/div[2]/div/div[2]/div[{j}]/div[{i}]/div/div/div/div/div/div/div/div/div/div/div/div[13]/div/div/div[4]/div/div/div[1]/div/div[1]/div/div[1]/div/span/div/span[2]/span/span"
                     comment_str = f"/html/body/div[1]/div/div/div[1]/div/div[3]/div/div/div[1]/div[1]/div/div/div[4]/div[2]/div/div[2]/div[{j}]/div[{i}]/div/div/div/div/div/div/div/div/div/div/div/div[13]/div/div/div[4]/div/div/div/div/div[1]/div/div[2]/div[2]/span/div/span/span"
                     share_str = f"/html/body/div[1]/div/div/div[1]/div/div[3]/div/div/div[1]/div[1]/div/div/div[4]/div[2]/div/div[2]/div[{j}]/div[{i}]/div/div/div/div/div/div/div/div/div/div/div/div[13]/div/div/div[4]/div/div/div/div/div[1]/div/div[2]/div[3]/span/div/span/span"
-                    share_str_2 = f"/html/body/div[1]/div/div/div[1]/div/div[3]/div/div/div[1]/div[1]/div/div/div[4]/div[2]/div/div[2]/div[{j}]/div[{i}]/div/div/div/div/div/div/div/div/div/div/div/div[13]/div/div/div[4]/div/div/div[1]/div/div[1]/div/div[2]/div[2]/span/div/span/span"
-                    comment_str_2 = f"/html/body/div[1]/div/div/div[1]/div/div[3]/div/div/div[1]/div[1]/div/div/div[4]/div[2]/div/div[2]/div[{j}]/div[{i}]/div/div/div/div/div/div/div/div/div/div/div/div[13]/div/div/div[4]/div/div/div[1]/div/div[1]/div/div[2]/div[1]/span/div/span/span"
                     react_pop_up = "/html/body/div[1]/div/div/div[1]/div/div[4]/div/div/div[1]/div/div[2]/div/div/div/div/div/div/div[1]/div/div[1]/div/div/div/div[2]"
                     react_pop_up_close = "/html/body/div[1]/div/div/div[1]/div/div[4]/div/div/div[1]/div/div[2]/div/div/div/div/div/div/div[1]/div/div[2]/div"
                                         
@@ -159,7 +152,6 @@ class FacebookProfileScraper:
                     except:
                         print("Date invalid. Maybe not hoverable.")
                         pass
-                    
                     
                     if check_if_datetime_exists("bharatiyajanatapartybjp", post_date):
                         print("Post already scraped: ", post_date)
@@ -229,15 +221,6 @@ class FacebookProfileScraper:
                         
                     download_images(img_src_list, IMAGE_DOWNLOAD_PATH, img_tags)
                     
-                    # try:
-                    #     reacts = int_from_string(bot.find_element_by_xpath(react_str).text)
-                    #     if (reacts != None):
-                    #         print ("\nReacts: "+ str(reacts))
-                    #         if reacts > 999:
-                    #             K_EXISTS = True
-                    # except Exception as e:
-                    #     print("\nReacts: 0")
-                    #     pass
                     comments = 0
                     shares = 0
                     try:
@@ -337,10 +320,7 @@ class FacebookProfileScraper:
                                     care=data['care'],
                                     haha=data['haha'],
                                     sad=data['sad'],
-                                    angry=data['angry'])
-                    
-                    # wait(1)
-                
+                                    angry=data['angry'])              
                 except Exception as e:
                     print("An error occurred in the main loop: ", str(e))
                     error_count += 1
