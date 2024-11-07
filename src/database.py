@@ -1,5 +1,5 @@
 import sqlite3
-import os
+import os, re
 import pandas as pd
 from datetime import datetime
 
@@ -154,6 +154,21 @@ def remove_rows_below_wordcount_threshold(table_name, wordcount_threshold):
     finally:
         conn.close()
 
+def remove_rows_below_value_threshold_of_column(table_name, column_name,value_threshold):
+    conn = sqlite3.connect(DATABASE_PATH)
+    c = conn.cursor()
+
+    query = f"DELETE FROM {table_name} WHERE {column_name} < ?"
+    
+    try:
+        c.execute(query, (value_threshold,))
+        conn.commit()
+        print("Rows deleted successfully.")
+    except sqlite3.Error as e:
+        print(f"Error deleting rows: {e}")
+    finally:
+        conn.close()
+
 def divide_df_by_year_and_save_to_excel(df, directory, paper_name):
     folder_name = f'{paper_name}_excel'
     os.makedirs(os.path.join(directory, folder_name), exist_ok=True)
@@ -240,7 +255,6 @@ def add_column(table_name, column_name, column_type):
     conn.commit()
     conn.close()
 
-
 def get_last_datetime(table_name):
     c = conn.cursor()
     offset = 0
@@ -253,23 +267,92 @@ def get_last_datetime(table_name):
         else:
             offset += 1
             print(offset)
+
+def get_datetime_from_id(table_name, id):
+    c = conn.cursor()
+    c.execute(f"SELECT datetime FROM {table_name} WHERE id = ?", (id,))
+    try:
+        return c.fetchone()[0]
+    except:
+        return ''
             
 def check_if_datetime_exists(table_name, date):
     c = conn.cursor()
     c.execute(f"SELECT * FROM {table_name} WHERE datetime = ?", (date,))
     return True if c.fetchone() else False
 
-if __name__ == "__main__":
-# create_table()
-# drop_table("ipplist")
-# csv_to_sqlite(os.path.join(BASE_DIR, "data", "IPP_v1.csv"), "ipplist")
-# rename_column_names_to_lowercase("ipplist")
-# add_column("ipplist", "flag", "INTEGER")
-# data = fetch_new_profile("facebook")
-# print(data)
-# create_profile_table("Bharatiya Janata Party (BJP)")
+def empty_datetime_refactor(table_name):
+    c = conn.cursor()
+    query = f"SELECT id FROM {table_name} WHERE datetime = ''"
+    c.execute(query)
+    conn.commit()
+    count = 0
+    for id in c.fetchall():
+        id = id[0]
+        prev_date = get_datetime_from_id(table_name, id - 1)
+        next_date = get_datetime_from_id(table_name, id + 1)
+        if prev_date != '' and next_date != '':
+            c.execute(f"UPDATE {table_name} SET datetime = ? WHERE id = ?", (prev_date, id))
+        else:
+            if prev_date != '':
+                c.execute(f"UPDATE {table_name} SET datetime = ? WHERE id = ?", (prev_date, id))
+            if next_date != '':
+                c.execute(f"UPDATE {table_name} SET datetime = ? WHERE id = ?", (next_date, id))
+        conn.commit()
+        count += 1
+    print(f"{count} rows refactored successfully.")
+    
+def check_datetime_format(date_string):
+    pattern = r"^(Monday|Tuesday|Wednesday|Thursday|Friday|Saturday|Sunday) \d{1,2} (January|February|March|April|May|June|July|August|September|October|November|December) \d{4} at \d{2}:\d{2}$"
+    return bool(re.match(pattern, date_string))
 
-# remove_rows_below_wordcount_threshold("bharatiyajanatapartybjp", 1)
-# remove_last_n_rows("bharatiyajanatapartybjp", 1)
+def non_empty_datetime_refactor(table_name):
+    c = conn.cursor()
+    query = f"SELECT id, datetime FROM {table_name}"
+    c.execute(query)
+    conn.commit()
+    count = 0
+    for row in c.fetchall():
+        id = row[0]
+        datetime = row[1]
+        if not check_datetime_format(datetime):
+            datetime = datetime.split('\n').pop()
+            c.execute(f"UPDATE {table_name} SET datetime = ? WHERE id = ?", (datetime, id))
+            if not check_datetime_format(datetime):
+                c.execute(f"UPDATE {table_name} SET datetime = '' WHERE id = ?", (id, ))
+            conn.commit()
+            count += 1
+    print(f"{count} rows refactored successfully.")
+
+def update_id_column(table_name):
+    c = conn.cursor()
+    query = f"""
+        UPDATE {table_name}
+        SET id = (
+            SELECT COUNT(*)
+            FROM {table_name} AS t
+            WHERE t.id <= {table_name}.id
+        );
+    """
+    c.execute(query)
+    conn.commit()
+    print("ID column updated successfully.")
+    
+if __name__ == "__main__":
+    # create_table()
+    # drop_table("ipplist")
+    # csv_to_sqlite(os.path.join(BASE_DIR, "data", "IPP_v1.csv"), "ipplist")
+    # rename_column_names_to_lowercase("ipplist")
+    # add_column("ipplist", "flag", "INTEGER")
+    # data = fetch_new_profile("facebook")
+    # print(data)
+    # create_profile_table("Bharatiya Janata Party (BJP)")
+
+    # remove_rows_below_wordcount_threshold("bharatiyajanatapartybjp", 1)
+    # remove_last_n_rows("bharatiyajanatapartybjp", 1)
     # get_last_datetime("bharatiyajanatapartybjp")
-    print(check_if_datetime_exists("bharatiyajanatapartybjp", "Friday 16 June 2023 at 15:29"))
+    # print(check_if_datetime_exists("bharatiyajanatapartybjp", "Friday 16 June 2023 at 15:29"))
+    # remove_rows_below_value_threshold_of_column("bharatiyajanatapartybjp", "all_reacts", 1)
+    # empty_datetime_refactor("bharatiyajanatapartybjp")
+    # non_empty_datetime_refactor("bharatiyajanatapartybjp")
+    update_id_column("bharatiyajanatapartybjp")
