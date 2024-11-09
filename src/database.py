@@ -334,10 +334,24 @@ def update_id_column(table_name):
             WHERE t.id <= {table_name}.id
         );
     """
+    print("Updating ID column...")
     c.execute(query)
     conn.commit()
     print("ID column updated successfully.")
-    
+
+def print_duplicate_rows(table_name):
+    c = conn.cursor()
+    query = f"""
+        SELECT *
+        FROM {table_name}
+        GROUP BY id
+        HAVING COUNT(*) > 1;
+    """
+    c.execute(query)
+    duplicates = c.fetchall()
+    for row in duplicates:
+        print(row)
+
 if __name__ == "__main__":
     # create_table()
     # drop_table("ipplist")
@@ -355,4 +369,5 @@ if __name__ == "__main__":
     # remove_rows_below_value_threshold_of_column("bharatiyajanatapartybjp", "all_reacts", 1)
     # empty_datetime_refactor("bharatiyajanatapartybjp")
     # non_empty_datetime_refactor("bharatiyajanatapartybjp")
-    update_id_column("bharatiyajanatapartybjp")
+    # update_id_column("bharatiyajanatapartybjp")
+    print_duplicate_rows("bharatiyajanatapartybjp")
