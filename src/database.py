@@ -139,6 +139,25 @@ def remove_last_n_rows(table_name, n):
         c.execute(f"DELETE FROM {table_name} WHERE id IN (SELECT id FROM {table_name} ORDER BY id DESC LIMIT {n})")
     print(f"{n} rows deleted from {table_name}")
 
+def remove_rows_greater_than_id(table_name, target_id):
+    conn = sqlite3.connect(DATABASE_PATH)
+    c = conn.cursor()
+
+    try:
+        count = 0
+        while True:
+            c.execute(f"SELECT COUNT(*) FROM {table_name} WHERE id > ?", (target_id,))
+            count = c.fetchone()[0]
+            if count == 0:
+                break
+            c.execute(f"DELETE FROM {table_name} WHERE id > ?", (target_id,))
+            conn.commit()
+        print(f"{count} rows with ID greater than {target_id} have been deleted.")
+    except sqlite3.Error as e:
+        print(f"Error deleting rows: {e}")
+    finally:
+        conn.close()
+
 def remove_rows_below_wordcount_threshold(table_name, wordcount_threshold):
     conn = sqlite3.connect(DATABASE_PATH)
     c = conn.cursor()
@@ -370,4 +389,6 @@ if __name__ == "__main__":
     # empty_datetime_refactor("bharatiyajanatapartybjp")
     # non_empty_datetime_refactor("bharatiyajanatapartybjp")
     # update_id_column("bharatiyajanatapartybjp")
-    print_duplicate_rows("bharatiyajanatapartybjp")
+    # print_duplicate_rows("bharatiyajanatapartybjp")
+    # remove_rows_greater_than_id("bharatiyajanatapartybjp", 16871)
+    pass
