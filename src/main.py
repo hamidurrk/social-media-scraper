@@ -373,7 +373,7 @@ class FacebookProfileScraper:
                                     angry=data['angry'])              
                 except Exception as e:
                     print("An error occurred in the main loop: ", str(e))
-                    bot.refresh()
+                    # bot.refresh()
                     error_count += 1
                     if error_count >= 10:
                         bot.refresh()
