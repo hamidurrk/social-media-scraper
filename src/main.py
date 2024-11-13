@@ -196,7 +196,7 @@ class FacebookProfileScraper:
                         anchor_scroll_element = bot.find_element_by_xpath(anchor_scroll)
                     except:
                         print({"error": "anchor_scroll_element not found"})
-                        for _ in range(5):
+                        for _ in range(1):
                             ActionChains(bot).send_keys(Keys.PAGE_DOWN).perform()
                             time.sleep(2)
                         j = 3
