@@ -104,69 +104,68 @@ class FacebookProfileScraper:
             "Angry": 0
         }
         
-        try:
-            bot.find_element_by_xpath(react_str).click()
-            WebDriverWait(bot, 10).until(
-                EC.presence_of_element_located((By.XPATH, f"{react_pop_up}"))
-            )
+        bot.find_element_by_xpath(react_str).click()
+        WebDriverWait(bot, 10).until(
+            EC.presence_of_element_located((By.XPATH, f"{react_pop_up}"))
+        )
+        time.sleep(1)
+        react_pop_up_element = bot.find_element_by_xpath(react_pop_up)
+        child_elements = react_pop_up_element.find_elements_by_xpath('.//div')
+        for child in child_elements:
+            aria_label = child.get_attribute("aria-label")
+            if not aria_label == None:
+                match = re.match(r'Show ([\d,]+) (people|person) who reacted with (\w+)', aria_label)
+                print(match)
+                print(aria_label)
+                if match:
+                    count = int(match.group(1).replace(',', ''))
+                    reaction = match.group(3)
+                    if reaction in reactions:
+                        reactions[reaction] = count
+                else:
+                    reaction, count = aria_label.split(", ")
+                    reactions[reaction] = int_from_string(count)
+        if reactions["All"] != sum(reactions.values())-reactions["All"]:
+            print("Reactions count mismatch")
+            wait = WebDriverWait(bot, 1)
+            try:
+                react_dropdown = wait.until(EC.element_to_be_clickable((By.XPATH, "//div[@role='tab' and @aria-haspopup='menu' and @tabindex='0']")))
+                react_dropdown.click()
+            except:
+                pass
             time.sleep(1)
-            react_pop_up_element = bot.find_element_by_xpath(react_pop_up)
-            child_elements = react_pop_up_element.find_elements_by_xpath('.//div')
-            for child in child_elements:
-                aria_label = child.get_attribute("aria-label")
-                if not aria_label == None:
-                    match = re.match(r'Show ([\d,]+) (people|person)who reacted with (\w+)', aria_label)
-                    if match:
-                        count = int(match.group(1).replace(',', ''))
-                        reaction = match.group(3)
-                        if reaction in reactions:
-                            reactions[reaction] = count
-                    else:
-                        reaction, count = aria_label.split(", ")
-                        reactions[reaction] = int_from_string(count)
-            if reactions["All"] != sum(reactions.values())-reactions["All"]:
-                print("Reactions count mismatch")
-                wait = WebDriverWait(bot, 1)
+            for i in range(1, 10):
                 try:
-                    react_dropdown = wait.until(EC.element_to_be_clickable((By.XPATH, "//div[@role='tab' and @aria-haspopup='menu' and @tabindex='0']")))
-                    react_dropdown.click()
+                    label_div = f"/html/body/div[1]/div/div/div[1]/div/div[4]/div/div/div[1]/div/div[2]/div/div/div/div/div/div/div[1]/div/div[1]/div/div/div/div[2]/div[{i}]"
+                    react_spans = f"/html/body/div[1]/div/div/div[1]/div/div[4]/div/div/div[1]/div/div[2]/div/div/div/div/div/div/div[1]/div/div[1]/div/div/div/div[2]/div[{i}]/div[1]/span"
+                    label_element = bot.find_element_by_xpath(label_div).get_attribute("aria-label")
+                    reacts = int_from_string(bot.find_element_by_xpath(react_spans).text)
+                    if reacts != None:
+                        if not label_element == None:
+                            label = label_element.split(" ").pop()
+                            reaction, count = label, reacts
+                            if reaction in reactions and count != reactions[reaction]:
+                                reactions[reaction] = count
                 except:
-                    pass
-                time.sleep(1)
-                for i in range(1, 10):
-                    try:
-                        label_div = f"/html/body/div[1]/div/div/div[1]/div/div[4]/div/div/div[1]/div/div[2]/div/div/div/div/div/div/div[1]/div/div[1]/div/div/div/div[2]/div[{i}]"
-                        react_spans = f"/html/body/div[1]/div/div/div[1]/div/div[4]/div/div/div[1]/div/div[2]/div/div/div/div/div/div/div[1]/div/div[1]/div/div/div/div[2]/div[{i}]/div[1]/span"
-                        label_element = bot.find_element_by_xpath(label_div).get_attribute("aria-label")
-                        reacts = int_from_string(bot.find_element_by_xpath(react_spans).text)
-                        if reacts != None:
-                            if not label_element == None:
-                                label = label_element.split(" ").pop()
-                                reaction, count = label, reacts
-                                if reaction in reactions and count != reactions[reaction]:
-                                    reactions[reaction] = count
-                    except:
-                        break
-                for i in range(1, 10):
-                    try:
-                        label_div = f"/html/body/div[1]/div/div/div[1]/div/div[4]/div/div/div[1]/div/div[3]/div/div/div[1]/div[1]/div/div/div/div/div/div/div[1]/div/div[{i}]"
-                        drop_react_spans = f"/html/body/div[1]/div/div/div[1]/div/div[4]/div/div/div[1]/div/div[3]/div/div/div[1]/div[1]/div/div/div/div/div/div/div[1]/div/div[{i}]/div[2]/div/div/span"
-                        label_element = bot.find_element_by_xpath(label_div).get_attribute("aria-label")
-                        reacts = int_from_string(bot.find_element_by_xpath(drop_react_spans).text)
-                        if reacts != None:
-                            if not label_element == None:
-                                label = label_element.split(" ").pop()
-                                reaction, count = label, reacts
-                                if reaction in reactions and count != reactions[reaction]:
-                                    reactions[reaction] = count
-                    except:
-                        break
-            wait = WebDriverWait(bot, 5)
-            close_button = wait.until(EC.element_to_be_clickable((By.XPATH, "//div[@aria-label='Close' and @role='button']")))
-            close_button.click()
-            # bot.find_element_by_xpath(react_pop_up_close).click()
-        except Exception as e:
-            print("An error occurred in reacts: ", str(e))
+                    break
+            for i in range(1, 10):
+                try:
+                    label_div = f"/html/body/div[1]/div/div/div[1]/div/div[4]/div/div/div[1]/div/div[3]/div/div/div[1]/div[1]/div/div/div/div/div/div/div[1]/div/div[{i}]"
+                    drop_react_spans = f"/html/body/div[1]/div/div/div[1]/div/div[4]/div/div/div[1]/div/div[3]/div/div/div[1]/div[1]/div/div/div/div/div/div/div[1]/div/div[{i}]/div[2]/div/div/span"
+                    label_element = bot.find_element_by_xpath(label_div).get_attribute("aria-label")
+                    reacts = int_from_string(bot.find_element_by_xpath(drop_react_spans).text)
+                    if reacts != None:
+                        if not label_element == None:
+                            label = label_element.split(" ").pop()
+                            reaction, count = label, reacts
+                            if reaction in reactions and count != reactions[reaction]:
+                                reactions[reaction] = count
+                except:
+                    break
+        wait = WebDriverWait(bot, 5)
+        close_button = wait.until(EC.element_to_be_clickable((By.XPATH, "//div[@aria-label='Close' and @role='button']")))
+        close_button.click()
+        # bot.find_element_by_xpath(react_pop_up_close).click()
         return reactions
 
     def crawl_timeline(self, start_date_obj = None, end_date_obj = None):
@@ -398,3 +397,12 @@ with open("C:\\Users\\hamid\\OneDrive\\Documents\\credential.txt", 'r', encoding
 if __name__ == "__main__":
     scraper = FacebookProfileScraper('hrk.sahil', password, browser_type=1)         # username of the facebook profile
     scraper.main(2010, 5, 30)
+    # i = 2
+    # j = 2
+    # react_str = f"/html/body/div[1]/div/div/div[1]/div/div[3]/div/div/div[1]/div[1]/div/div/div[4]/div[2]/div/div[2]/div[{j}]/div[{i}]/div/div/div/div/div/div/div/div/div/div/div/div[13]/div/div/div[4]/div/div/div[1]/div/div[1]/div/div[1]/div/span/div/span[2]/span/span"
+    # comment_str = f"/html/body/div[1]/div/div/div[1]/div/div[3]/div/div/div[1]/div[1]/div/div/div[4]/div[2]/div/div[2]/div[{j}]/div[{i}]/div/div/div/div/div/div/div/div/div/div/div/div[13]/div/div/div[4]/div/div/div/div/div[1]/div/div[2]/div[2]/span/div/span/span"
+    # share_str = f"/html/body/div[1]/div/div/div[1]/div/div[3]/div/div/div[1]/div[1]/div/div/div[4]/div[2]/div/div[2]/div[{j}]/div[{i}]/div/div/div/div/div/div/div/div/div/div/div/div[13]/div/div/div[4]/div/div/div/div/div[1]/div/div[2]/div[3]/span/div/span/span"
+    # react_pop_up = "/html/body/div[1]/div/div/div[1]/div/div[4]/div/div/div[1]/div/div[2]/div/div/div/div/div/div/div[1]/div/div[1]/div/div/div/div[2]"
+    # react_pop_up_close = "/html/body/div[1]/div/div/div[1]/div/div[4]/div/div/div[1]/div/div[2]/div/div/div/div/div/div/div[1]/div/div[2]/div"
+            
+    # print(scraper.get_reacts(react_str=react_str, react_pop_up=react_pop_up, react_pop_up_close=react_pop_up_close))
