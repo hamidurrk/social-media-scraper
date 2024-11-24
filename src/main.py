@@ -64,6 +64,29 @@ class FacebookProfileScraper:
             bot.get(url)
         gen_prompt("Navigating to " + name, char="#")
     
+    def hover_date_element(self, element, box_element):
+        for i in range(5):
+            try:
+                bot = self.bot
+                if i < 2:
+                    element_obj = WebDriverWait(bot, 10).until(
+                        EC.visibility_of_element_located((By.XPATH, element))
+                    )
+                    hover_script = "var event = new MouseEvent('mouseover', {bubbles: true, cancelable: true}); arguments[0].dispatchEvent(event);"
+                    bot.execute_script(hover_script, element_obj)
+                else:
+                    hover = ActionChains(bot).move_to_element(bot.find_element_by_xpath(element))
+                    hover.perform()
+                
+                time.sleep(2)
+                date_hover_box_element = bot.find_element_by_xpath(box_element)
+                post_date = date_hover_box_element.text
+                print("Post date: ", post_date)
+                post_date_obj = parse_facebook_date(post_date)
+                return post_date, post_date_obj
+            except Exception as e:
+                print("An error occurred while hovering over the date element:", str(e))
+        return None, None
     
     def post_filter(self, filter_element, year: int, month: str, day: int):
         bot = self.bot
@@ -115,8 +138,6 @@ class FacebookProfileScraper:
             aria_label = child.get_attribute("aria-label")
             if not aria_label == None:
                 match = re.match(r'Show ([\d,]+) (people|person) who reacted with (\w+)', aria_label)
-                print(match)
-                print(aria_label)
                 if match:
                     count = int(match.group(1).replace(',', ''))
                     reaction = match.group(3)
@@ -202,7 +223,7 @@ class FacebookProfileScraper:
                     
                     post_box = f"/html/body/div[1]/div/div/div[1]/div/div[3]/div/div/div[1]/div[1]/div/div/div[4]/div[2]/div/div[2]/div[{j}]/div[{i}]/div/div/div/div/div/div/div/div/div/div/div/div[13]/div/div/div[3]/div[1]/div"
                     anchor_scroll = f"/html/body/div[1]/div/div/div[1]/div/div[3]/div/div/div[1]/div[1]/div/div/div[4]/div[2]/div/div[2]/div[{j}]/div[{i}]/div/div/div/div/div/div/div/div/div/div/div/div[13]/div/div/div[2]/div/div[3]/div/div"
-                    date_hover_element = f"/html/body/div[1]/div/div/div[1]/div/div[3]/div/div/div[1]/div[1]/div/div/div[4]/div[2]/div/div[2]/div[{j}]/div[{i}]/div/div/div/div/div/div/div/div/div/div/div/div[13]/div/div/div[2]/div/div[2]/div/div[2]/span/div/span[1]/span/a"          
+                    date_hover_element = f"/html/body/div[1]/div/div/div[1]/div/div[3]/div/div/div[1]/div[1]/div/div/div[4]/div[2]/div/div[2]/div[{j}]/div[{i}]/div/div/div/div/div/div/div/div/div/div/div/div[13]/div/div/div[2]/div/div[2]/div/div[2]/span/div/span[1]/span/a"
                     date_hover_box = f"/html/body/div[1]/div/div/div[1]/div/div[3]/div/div/div[2]/div"
                     img_box = f"/html/body/div[1]/div/div/div[1]/div/div[3]/div/div/div[1]/div[1]/div/div/div[4]/div[2]/div/div[2]/div[{j}]/div[{i}]/div/div/div/div/div/div/div/div/div/div/div/div[13]/div/div/div[3]/div/div[1]/a/div[1]/div/div/div/img"
                     img_box_2 = f"/html/body/div[1]/div/div/div[1]/div/div[3]/div/div/div[1]/div[1]/div/div/div[4]/div[2]/div/div[2]/div[{j}]/div[{i}]/div/div/div/div/div/div/div/div/div/div/div/div[13]/div/div/div[3]/div[2]/div[1]/div/div/div"
@@ -217,19 +238,12 @@ class FacebookProfileScraper:
                     )
                     bot.execute_script("window.scrollBy(0, arguments[0].getBoundingClientRect().top - 150);", anchor_scroll_element)              
                     time.sleep(2)
+                                    
+                    post_date, post_date_obj = self.hover_date_element(date_hover_element, date_hover_box)
                     
-                    try:
-                        hover = ActionChains(bot).move_to_element(bot.find_element_by_xpath(date_hover_element))
-                        hover.perform()
-                        time.sleep(2)
-                        
-                        date_hover_box_element = bot.find_element_by_xpath(date_hover_box)
-                        post_date = date_hover_box_element.text
-                        post_date_obj = parse_facebook_date(post_date)
-                    except:
-                        print("Date invalid. Maybe not hoverable.")
-                        pass
-                    
+                    if post_date is None:
+                        print("No date found")
+                        continue
                     if check_if_datetime_exists("bharatiyajanatapartybjp", post_date):
                         print("Post already scraped: ", post_date)
                         continue
@@ -397,12 +411,18 @@ with open("C:\\Users\\hamid\\OneDrive\\Documents\\credential.txt", 'r', encoding
 if __name__ == "__main__":
     scraper = FacebookProfileScraper('hrk.sahil', password, browser_type=1)         # username of the facebook profile
     scraper.main(2010, 5, 30)
-    # i = 2
+    # i = 8
     # j = 2
+    # post_box = f"/html/body/div[1]/div/div/div[1]/div/div[3]/div/div/div[1]/div[1]/div/div/div[4]/div[2]/div/div[2]/div[{j}]/div[{i}]/div/div/div/div/div/div/div/div/div/div/div/div[13]/div/div/div[3]/div[1]/div"
+    # anchor_scroll = f"/html/body/div[1]/div/div/div[1]/div/div[3]/div/div/div[1]/div[1]/div/div/div[4]/div[2]/div/div[2]/div[{j}]/div[{i}]/div/div/div/div/div/div/div/div/div/div/div/div[13]/div/div/div[2]/div/div[3]/div/div"
+    # date_hover_element = f"/html/body/div[1]/div/div/div[1]/div/div[3]/div/div/div[1]/div[1]/div/div/div[4]/div[2]/div/div[2]/div[{j}]/div[{i}]/div/div/div/div/div/div/div/div/div/div/div/div[13]/div/div/div[2]/div/div[2]/div/div[2]/span/div/span[1]/span/a"
+    # date_hover_box = f"/html/body/div[1]/div/div/div[1]/div/div[3]/div/div/div[2]/div"
+    # img_box = f"/html/body/div[1]/div/div/div[1]/div/div[3]/div/div/div[1]/div[1]/div/div/div[4]/div[2]/div/div[2]/div[{j}]/div[{i}]/div/div/div/div/div/div/div/div/div/div/div/div[13]/div/div/div[3]/div/div[1]/a/div[1]/div/div/div/img"
+    # img_box_2 = f"/html/body/div[1]/div/div/div[1]/div/div[3]/div/div/div[1]/div[1]/div/div/div[4]/div[2]/div/div[2]/div[{j}]/div[{i}]/div/div/div/div/div/div/div/div/div/div/div/div[13]/div/div/div[3]/div[2]/div[1]/div/div/div"
     # react_str = f"/html/body/div[1]/div/div/div[1]/div/div[3]/div/div/div[1]/div[1]/div/div/div[4]/div[2]/div/div[2]/div[{j}]/div[{i}]/div/div/div/div/div/div/div/div/div/div/div/div[13]/div/div/div[4]/div/div/div[1]/div/div[1]/div/div[1]/div/span/div/span[2]/span/span"
     # comment_str = f"/html/body/div[1]/div/div/div[1]/div/div[3]/div/div/div[1]/div[1]/div/div/div[4]/div[2]/div/div[2]/div[{j}]/div[{i}]/div/div/div/div/div/div/div/div/div/div/div/div[13]/div/div/div[4]/div/div/div/div/div[1]/div/div[2]/div[2]/span/div/span/span"
     # share_str = f"/html/body/div[1]/div/div/div[1]/div/div[3]/div/div/div[1]/div[1]/div/div/div[4]/div[2]/div/div[2]/div[{j}]/div[{i}]/div/div/div/div/div/div/div/div/div/div/div/div[13]/div/div/div[4]/div/div/div/div/div[1]/div/div[2]/div[3]/span/div/span/span"
     # react_pop_up = "/html/body/div[1]/div/div/div[1]/div/div[4]/div/div/div[1]/div/div[2]/div/div/div/div/div/div/div[1]/div/div[1]/div/div/div/div[2]"
     # react_pop_up_close = "/html/body/div[1]/div/div/div[1]/div/div[4]/div/div/div[1]/div/div[2]/div/div/div/div/div/div/div[1]/div/div[2]/div"
-            
-    # print(scraper.get_reacts(react_str=react_str, react_pop_up=react_pop_up, react_pop_up_close=react_pop_up_close))
+    
+    # post_date, post_date_obj = scraper.hover_date_element(date_hover_element, date_hover_box)
