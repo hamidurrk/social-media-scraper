@@ -64,28 +64,38 @@ class FacebookProfileScraper:
             bot.get(url)
         gen_prompt("Navigating to " + name, char="#")
     
-    def hover_date_element(self, element, box_element):
-        for i in range(5):
+    def hover_date_element(self, date_hover_element, date_hover_box, retries=5, timeout=2):
+        bot = self.bot
+        for attempt in range(retries):
             try:
-                bot = self.bot
-                if i < 2:
-                    element_obj = WebDriverWait(bot, 10).until(
-                        EC.visibility_of_element_located((By.XPATH, element))
-                    )
-                    hover_script = "var event = new MouseEvent('mouseover', {bubbles: true, cancelable: true}); arguments[0].dispatchEvent(event);"
-                    bot.execute_script(hover_script, element_obj)
-                else:
-                    hover = ActionChains(bot).move_to_element(bot.find_element_by_xpath(element))
-                    hover.perform()
+                # Ensure the element is visible
+                element = WebDriverWait(bot, 10).until(
+                    EC.visibility_of_element_located((By.XPATH, date_hover_element))
+                )
                 
-                time.sleep(2)
-                date_hover_box_element = bot.find_element_by_xpath(box_element)
+                # Try using ActionChains to hover over the element
+                if attempt < 2:
+                    hover = ActionChains(bot).move_to_element(element)
+                    hover.perform()
+                    print(f"ActionChains hover attempt {attempt + 1} succeeded.")
+                else:
+                    print(f"ActionChains hover attempt {attempt + 1} failed")
+                    # Use JavaScript to hover over the element as a fallback
+                    hover_script = "var event = new MouseEvent('mouseover', {bubbles: true, cancelable: true}); arguments[0].dispatchEvent(event);"
+                    bot.execute_script(hover_script, element)
+                    print(f"JavaScript hover attempt {attempt + 1} succeeded.")
+                
+                time.sleep(timeout)
+                
+                date_hover_box_element = WebDriverWait(bot, 10).until(
+                    EC.visibility_of_element_located((By.XPATH, date_hover_box))
+                )
                 post_date = date_hover_box_element.text
-                print("Post date: ", post_date)
                 post_date_obj = parse_facebook_date(post_date)
                 return post_date, post_date_obj
             except Exception as e:
-                print("An error occurred while hovering over the date element:", str(e))
+                print(f"Attempt {attempt + 1} failed: {e}")
+                time.sleep(timeout)
         return None, None
     
     def post_filter(self, filter_element, year: int, month: str, day: int):
@@ -207,6 +217,8 @@ class FacebookProfileScraper:
                 try:
                     i += 1
                     j = 2
+                    post_date = None
+                    post_date_obj = None
                     wrt = "Post no: " + str(i) + " "
                     print(wrt.center(70, "-"))
                     
@@ -232,14 +244,37 @@ class FacebookProfileScraper:
                     share_str = f"/html/body/div[1]/div/div/div[1]/div/div[3]/div/div/div[1]/div[1]/div/div/div[4]/div[2]/div/div[2]/div[{j}]/div[{i}]/div/div/div/div/div/div/div/div/div/div/div/div[13]/div/div/div[4]/div/div/div/div/div[1]/div/div[2]/div[3]/span/div/span/span"
                     react_pop_up = "/html/body/div[1]/div/div/div[1]/div/div[4]/div/div/div[1]/div/div[2]/div/div/div/div/div/div/div[1]/div/div[1]/div/div/div/div[2]"
                     react_pop_up_close = "/html/body/div[1]/div/div/div[1]/div/div[4]/div/div/div[1]/div/div[2]/div/div/div/div/div/div/div[1]/div/div[2]/div"
-                                        
+                    dummy_clicable = "/html/body/div[1]/div/div/div[1]/div/div[3]/div/div/div[1]/div[1]/div/div/div[4]/div[2]/div/div[1]/div[2]/div/div[1]/div/div/div/div/div[1]/div/div/div/div/span/div/div[1]/h2/span/span"             
                     anchor_scroll_element = WebDriverWait(bot, 5).until(
                         EC.visibility_of_element_located((By.XPATH, anchor_scroll))
                     )
                     bot.execute_script("window.scrollBy(0, arguments[0].getBoundingClientRect().top - 150);", anchor_scroll_element)              
                     time.sleep(2)
+                    
+                    try:
+                        clickable = WebDriverWait(bot, 5).until(
+                            EC.element_to_be_clickable((By.XPATH, dummy_clicable))
+                        )
+                        clickable.click()
+                    except Exception as e:
+                        print("An error occurred while clicking the dummy clickable element:", str(e))
+                        pass
                                     
                     post_date, post_date_obj = self.hover_date_element(date_hover_element, date_hover_box)
+                    
+                    # for k in range(5):
+                    #     try:
+                    #         hover = ActionChains(bot).move_to_element(bot.find_element_by_xpath(date_hover_element))
+                    #         hover.perform()
+                            
+                    #         time.sleep(2)
+                    #         date_hover_box_element = bot.find_element_by_xpath(date_hover_box)
+                    #         post_date = date_hover_box_element.text
+                    #         print("Post date: ", post_date)
+                    #         post_date_obj = parse_facebook_date(post_date)
+                    #         break
+                    #     except Exception as e:
+                    #         print("An error occurred while hovering over the date element:", str(e))
                     
                     if post_date is None:
                         print("No date found")
