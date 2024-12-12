@@ -1,6 +1,8 @@
 from selenium import webdriver
+from selenium.webdriver.chrome.options import Options
 import time, sqlite3, sys, os, hashlib
 from webdriver_manager.firefox import GeckoDriverManager
+from webdriver_manager.chrome import ChromeDriverManager
 from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.common.action_chains import ActionChains
 from selenium.webdriver.support.ui import WebDriverWait
@@ -16,17 +18,22 @@ IMAGE_DOWNLOAD_PATH = os.path.join(BASE_DIR, "data", "img")
 conn = sqlite3.connect(DATABASE_PATH)
 
 class FacebookProfileScraper:
-    def __init__(self, username, password, browser_type=0):
+    def __init__(self, username, password, browser="CHROME"):
         self.username = username
         self.password = password
         gen_prompt("Facebook Profile Scraper (for research use only)")
         firefox_options = webdriver.FirefoxOptions()
-        # firefox_options.add_argument("--headless") 
         firefox_options.add_argument("--devtools")
-        if (browser_type):
+        if (browser == "FIREFOX"):
             self.bot = webdriver.Firefox(executable_path=GeckoDriverManager().install(), service_args = ['--marionette-port', '2828', '--connect-existing'], options=firefox_options)
-        else:
-            self.bot = webdriver.Firefox(executable_path=GeckoDriverManager().install())
+        elif (browser == "CHROME"):
+            chrome_options = Options()
+            chrome_options.add_experimental_option("debuggerAddress", "localhost:9222")
+            chrome_install = ChromeDriverManager().install()
+            folder = os.path.dirname(chrome_install)
+            chromedriver_path = os.path.join(folder, "chromedriver.exe")
+            self.bot = webdriver.Chrome(executable_path=chromedriver_path, options=chrome_options)
+        
         # self.bot.set_window_position(0, 0) 
         # self.bot.set_window_size(960, 1043)
         sys.stdout.flush()
@@ -64,26 +71,17 @@ class FacebookProfileScraper:
             bot.get(url)
         gen_prompt("Navigating to " + name, char="#")
     
-    def hover_date_element(self, date_hover_element, date_hover_box, retries=5, timeout=2):
+    def hover_date_element(self, date_hover_element, date_hover_box, retries=5, timeout=0.5):
         bot = self.bot
         for attempt in range(retries):
             try:
                 # Ensure the element is visible
-                element = WebDriverWait(bot, 10).until(
+                element = WebDriverWait(bot, 2).until(
                     EC.visibility_of_element_located((By.XPATH, date_hover_element))
                 )
                 
-                # Try using ActionChains to hover over the element
-                if attempt < 2:
-                    hover = ActionChains(bot).move_to_element(element)
-                    hover.perform()
-                    print(f"ActionChains hover attempt {attempt + 1} succeeded.")
-                else:
-                    print(f"ActionChains hover attempt {attempt + 1} failed")
-                    # Use JavaScript to hover over the element as a fallback
-                    hover_script = "var event = new MouseEvent('mouseover', {bubbles: true, cancelable: true}); arguments[0].dispatchEvent(event);"
-                    bot.execute_script(hover_script, element)
-                    print(f"JavaScript hover attempt {attempt + 1} succeeded.")
+                hover = ActionChains(bot).move_to_element(element)
+                hover.perform()
                 
                 time.sleep(timeout)
                 
@@ -194,9 +192,9 @@ class FacebookProfileScraper:
                 except:
                     break
         wait = WebDriverWait(bot, 5)
-        close_button = wait.until(EC.element_to_be_clickable((By.XPATH, "//div[@aria-label='Close' and @role='button']")))
-        close_button.click()
-        # bot.find_element_by_xpath(react_pop_up_close).click()
+        # close_button = wait.until(EC.element_to_be_clickable((By.XPATH, "//div[@aria-label='Close' and @role='button']")))
+        # close_button.click()
+        bot.find_element_by_xpath(react_pop_up_close).click()
         return reactions
 
     def crawl_timeline(self, start_date_obj = None, end_date_obj = None):
@@ -207,7 +205,8 @@ class FacebookProfileScraper:
             time.sleep(2)
             current_date_obj = start_date_obj - timedelta(n)
             print(current_date_obj.year, current_date_obj.strftime("%B"), current_date_obj.day)
-            filter_button = "/html/body/div[1]/div/div/div[1]/div/div[3]/div/div/div[1]/div[1]/div/div/div[4]/div[2]/div/div[2]/div[1]/div/div/div/div[2]/div/div/div"
+                             
+            filter_button = "/html/body/div[1]/div/div/div[1]/div/div[3]/div/div/div[1]/div[1]/div/div/div[4]/div[2]/div/div[2]/div[2]/div/div/div/div[2]/div/div/div"
             self.post_filter(filter_button, current_date_obj.year, current_date_obj.strftime("%B"), current_date_obj.day)
             time.sleep(2)
             
@@ -227,15 +226,16 @@ class FacebookProfileScraper:
                     try:
                         anchor_scroll_element = bot.find_element_by_xpath(anchor_scroll)
                     except:
-                        print({"error": "anchor_scroll_element not found"})
+                        # print({"error": "anchor_scroll_element not found"})
                         for _ in range(1):
-                            ActionChains(bot).send_keys(Keys.PAGE_DOWN).perform()
-                            time.sleep(2)
+                            # ActionChains(bot).send_keys(Keys.PAGE_DOWN).perform()
+                            # time.sleep(2)
+                            pass
                         j = 3
                     
                     post_box = f"/html/body/div[1]/div/div/div[1]/div/div[3]/div/div/div[1]/div[1]/div/div/div[4]/div[2]/div/div[2]/div[{j}]/div[{i}]/div/div/div/div/div/div/div/div/div/div/div/div[13]/div/div/div[3]/div[1]/div"
                     anchor_scroll = f"/html/body/div[1]/div/div/div[1]/div/div[3]/div/div/div[1]/div[1]/div/div/div[4]/div[2]/div/div[2]/div[{j}]/div[{i}]/div/div/div/div/div/div/div/div/div/div/div/div[13]/div/div/div[2]/div/div[3]/div/div"
-                    date_hover_element = f"/html/body/div[1]/div/div/div[1]/div/div[3]/div/div/div[1]/div[1]/div/div/div[4]/div[2]/div/div[2]/div[{j}]/div[{i}]/div/div/div/div/div/div/div/div/div/div/div/div[13]/div/div/div[2]/div/div[2]/div/div[2]/span/div/span[1]/span/a"
+                    date_hover_element = f"/html/body/div[1]/div/div/div[1]/div/div[3]/div/div/div[1]/div[1]/div/div/div[4]/div[2]/div/div[2]/div[{j}]/div[{i}]/div/div/div/div/div/div/div/div/div/div/div/div[13]/div/div/div[2]/div/div[2]/div/div[2]/span/div/span[1]/span"
                     date_hover_box = f"/html/body/div[1]/div/div/div[1]/div/div[3]/div/div/div[2]/div"
                     img_box = f"/html/body/div[1]/div/div/div[1]/div/div[3]/div/div/div[1]/div[1]/div/div/div[4]/div[2]/div/div[2]/div[{j}]/div[{i}]/div/div/div/div/div/div/div/div/div/div/div/div[13]/div/div/div[3]/div/div[1]/a/div[1]/div/div/div/img"
                     img_box_2 = f"/html/body/div[1]/div/div/div[1]/div/div[3]/div/div/div[1]/div[1]/div/div/div[4]/div[2]/div/div[2]/div[{j}]/div[{i}]/div/div/div/div/div/div/div/div/div/div/div/div[13]/div/div/div[3]/div[2]/div[1]/div/div/div"
@@ -245,20 +245,21 @@ class FacebookProfileScraper:
                     react_pop_up = "/html/body/div[1]/div/div/div[1]/div/div[4]/div/div/div[1]/div/div[2]/div/div/div/div/div/div/div[1]/div/div[1]/div/div/div/div[2]"
                     react_pop_up_close = "/html/body/div[1]/div/div/div[1]/div/div[4]/div/div/div[1]/div/div[2]/div/div/div/div/div/div/div[1]/div/div[2]/div"
                     dummy_clicable = "/html/body/div[1]/div/div/div[1]/div/div[3]/div/div/div[1]/div[1]/div/div/div[4]/div[2]/div/div[1]/div[2]/div/div[1]/div/div/div/div/div[1]/div/div/div/div/span/div/div[1]/h2/span/span"             
+
                     anchor_scroll_element = WebDriverWait(bot, 5).until(
                         EC.visibility_of_element_located((By.XPATH, anchor_scroll))
                     )
                     bot.execute_script("window.scrollBy(0, arguments[0].getBoundingClientRect().top - 150);", anchor_scroll_element)              
                     time.sleep(2)
                     
-                    try:
-                        clickable = WebDriverWait(bot, 5).until(
-                            EC.element_to_be_clickable((By.XPATH, dummy_clicable))
-                        )
-                        clickable.click()
-                    except Exception as e:
-                        print("An error occurred while clicking the dummy clickable element:", str(e))
-                        pass
+                    # try:
+                    #     clickable = WebDriverWait(bot, 5).until(
+                    #         EC.element_to_be_clickable((By.XPATH, dummy_clicable))
+                    #     )
+                    #     clickable.click()
+                    # except Exception as e:
+                    #     print("An error occurred while clicking the dummy clickable element:", str(e))
+                    #     pass
                                     
                     post_date, post_date_obj = self.hover_date_element(date_hover_element, date_hover_box)
                     
@@ -444,7 +445,7 @@ with open("C:\\Users\\hamid\\OneDrive\\Documents\\credential.txt", 'r', encoding
     password = f.read()
 
 if __name__ == "__main__":
-    scraper = FacebookProfileScraper('hrk.sahil', password, browser_type=1)         # username of the facebook profile
+    scraper = FacebookProfileScraper('hrk.sahil', password, browser="CHROME")         # username of the facebook profile
     scraper.main(2010, 5, 30)
     # i = 8
     # j = 2
