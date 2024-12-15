@@ -61,6 +61,10 @@ def parse_facebook_date(date_str):
     date_format = "%A %d %B %Y at %H:%M"
     return datetime.strptime(date_str, date_format)
 
+def create_facebook_date(date_obj):
+    date_format = "%A %d %B %Y at %H:%M"
+    return date_obj.strftime(date_format)
+
 def compare_dates(date_str1, date_str2):
     date1 = datetime.strptime(date_str1, "%A, %b %d, %Y")
     date2 = datetime.strptime(date_str2, "%m/%d/%Y")

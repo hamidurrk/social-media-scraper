@@ -71,11 +71,10 @@ class FacebookProfileScraper:
             bot.get(url)
         gen_prompt("Navigating to " + name, char="#")
     
-    def hover_date_element(self, date_hover_element, date_hover_box, retries=5, timeout=0.5):
+    def hover_date_element(self, date_hover_element, date_hover_box, retries=1, timeout=0.5):
         bot = self.bot
         for attempt in range(retries):
             try:
-                # Ensure the element is visible
                 element = WebDriverWait(bot, 2).until(
                     EC.visibility_of_element_located((By.XPATH, date_hover_element))
                 )
@@ -85,7 +84,7 @@ class FacebookProfileScraper:
                 
                 time.sleep(timeout)
                 
-                date_hover_box_element = WebDriverWait(bot, 10).until(
+                date_hover_box_element = WebDriverWait(bot, 2).until(
                     EC.visibility_of_element_located((By.XPATH, date_hover_box))
                 )
                 post_date = date_hover_box_element.text
@@ -94,6 +93,12 @@ class FacebookProfileScraper:
             except Exception as e:
                 print(f"Attempt {attempt + 1} failed: {e}")
                 time.sleep(timeout)
+                print("Creating artificial date.")
+                last_datetime_obj = parse_facebook_date(get_last_datetime("bharatiyajanatapartybjp"))
+                artificial_date_obj = last_datetime_obj - timedelta(hours=1)
+                artificial_date = create_facebook_date(artificial_date_obj)
+                print(f"Artificial date: {artificial_date}")
+                return artificial_date, artificial_date_obj
         return None, None
     
     def post_filter(self, filter_element, year: int, month: str, day: int):
@@ -197,6 +202,32 @@ class FacebookProfileScraper:
         bot.find_element_by_xpath(react_pop_up_close).click()
         return reactions
 
+    def search_keyword_in_html(self, keyword, html):
+        if keyword in html:
+            word_index = html.index(keyword)
+            word = html[word_index-5:word_index+len(keyword)]
+            return word
+        return False
+        
+    def get_html(self, element):
+        bot = self.bot
+        html = bot.execute_script("return arguments[0].innerHTML;", element)
+        comments = self.search_keyword_in_html("shares", html)
+        comments = int_from_string(comments)
+        return comments
+    
+    def get_comments_shares_alt(self, comment_share_parent):
+        bot = self.bot
+        try:
+            html = self.get_html(bot.find_element_by_xpath(comment_share_parent))
+            comments = self.search_keyword_in_html("comments", html)
+            comments = int_from_string(comments)
+            shares = self.search_keyword_in_html("shares", html)
+            shares = int_from_string(shares)
+            return (comments, shares)
+        except:
+            return None
+    
     def crawl_timeline(self, start_date_obj = None, end_date_obj = None):
         bot = self.bot
         print(int((start_date_obj - end_date_obj).days), "days to crawl")
@@ -240,6 +271,7 @@ class FacebookProfileScraper:
                     img_box = f"/html/body/div[1]/div/div/div[1]/div/div[3]/div/div/div[1]/div[1]/div/div/div[4]/div[2]/div/div[2]/div[{j}]/div[{i}]/div/div/div/div/div/div/div/div/div/div/div/div[13]/div/div/div[3]/div/div[1]/a/div[1]/div/div/div/img"
                     img_box_2 = f"/html/body/div[1]/div/div/div[1]/div/div[3]/div/div/div[1]/div[1]/div/div/div[4]/div[2]/div/div[2]/div[{j}]/div[{i}]/div/div/div/div/div/div/div/div/div/div/div/div[13]/div/div/div[3]/div[2]/div[1]/div/div/div"
                     react_str = f"/html/body/div[1]/div/div/div[1]/div/div[3]/div/div/div[1]/div[1]/div/div/div[4]/div[2]/div/div[2]/div[{j}]/div[{i}]/div/div/div/div/div/div/div/div/div/div/div/div[13]/div/div/div[4]/div/div/div[1]/div/div[1]/div/div[1]/div/span/div/span[2]/span/span"
+                    comment_share_parent = f"/html/body/div[1]/div/div/div[1]/div/div[3]/div/div/div[1]/div[1]/div/div/div[4]/div[2]/div/div[2]/div[{j}]/div[{i}]/div/div/div/div/div/div/div/div/div/div/div/div[13]/div/div/div[4]/div/div/div[1]/div/div[1]"
                     comment_str = f"/html/body/div[1]/div/div/div[1]/div/div[3]/div/div/div[1]/div[1]/div/div/div[4]/div[2]/div/div[2]/div[{j}]/div[{i}]/div/div/div/div/div/div/div/div/div/div/div/div[13]/div/div/div[4]/div/div/div/div/div[1]/div/div[2]/div[2]/span/div/span/span"
                     share_str = f"/html/body/div[1]/div/div/div[1]/div/div[3]/div/div/div[1]/div[1]/div/div/div[4]/div[2]/div/div[2]/div[{j}]/div[{i}]/div/div/div/div/div/div/div/div/div/div/div/div[13]/div/div/div[4]/div/div/div/div/div[1]/div/div[2]/div[3]/span/div/span/span"
                     react_pop_up = "/html/body/div[1]/div/div/div[1]/div/div[4]/div/div/div[1]/div/div[2]/div/div/div/div/div/div/div[1]/div/div[1]/div/div/div/div[2]"
@@ -348,25 +380,31 @@ class FacebookProfileScraper:
                         
                     download_images(img_src_list, IMAGE_DOWNLOAD_PATH, img_tags)
                     
-                    comments = 0
-                    shares = 0
-                    try:
-                        comments = int_from_string(bot.find_element_by_xpath(comment_str).text)
-                        if (comments != None):
-                            # print ("Comments: "+ str(comments))
+                    data = self.get_comments_shares_alt(comment_share_parent)
+                    if data:
+                        comments, shares = data[0], data[1]
+                    else:
+                        print("No comments or shares found using alt method")
+                        comments = 0
+                        shares = 0
+                        try:
+                            print(bot.find_element_by_xpath(comment_str).text)
+                            comments = int_from_string(bot.find_element_by_xpath(comment_str).text)
+                            if (comments != None):
+                                # print ("Comments: "+ str(comments))
+                                pass
+                        except Exception as e:
+                            # print("Comments: error")
                             pass
-                    except Exception as e:
-                        # print("Comments: 0")
-                        pass
 
-                    try:
-                        shares = int_from_string(bot.find_element_by_xpath(share_str).text)
-                        if (shares != None):
-                            # print ("Shares: "+ str(shares))
+                        try:
+                            shares = int_from_string(bot.find_element_by_xpath(share_str).text)
+                            if (shares != None):
+                                # print ("Shares: "+ str(shares))
+                                pass
+                        except Exception as e:
+                            # print("Shares: 0")
                             pass
-                    except Exception as e:
-                        # print("Shares: 0")
-                        pass
                     
                     reactions = self.get_reacts(react_str, react_pop_up, react_pop_up_close)
                                 
@@ -445,8 +483,12 @@ with open("C:\\Users\\hamid\\OneDrive\\Documents\\credential.txt", 'r', encoding
     password = f.read()
 
 if __name__ == "__main__":
+    comment_share_parent = f"/html/body/div[1]/div/div/div[1]/div/div[3]/div/div/div[1]/div[1]/div/div/div[4]/div[2]/div/div[2]/div[3]/div[13]/div/div/div/div/div/div/div/div/div/div/div/div[13]/div/div/div[4]/div/div/div[1]/div/div[1]"
+                    
     scraper = FacebookProfileScraper('hrk.sahil', password, browser="CHROME")         # username of the facebook profile
-    scraper.main(2010, 5, 30)
+    # scraper.main(2010, 5, 30)
+    print(scraper.get_html(scraper.bot.find_element_by_xpath(comment_share_parent)))
+    
     # i = 8
     # j = 2
     # post_box = f"/html/body/div[1]/div/div/div[1]/div/div[3]/div/div/div[1]/div[1]/div/div/div[4]/div[2]/div/div[2]/div[{j}]/div[{i}]/div/div/div/div/div/div/div/div/div/div/div/div[13]/div/div/div[3]/div[1]/div"
