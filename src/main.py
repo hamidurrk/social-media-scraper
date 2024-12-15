@@ -212,21 +212,16 @@ class FacebookProfileScraper:
     def get_html(self, element):
         bot = self.bot
         html = bot.execute_script("return arguments[0].innerHTML;", element)
-        comments = self.search_keyword_in_html("shares", html)
-        comments = int_from_string(comments)
-        return comments
+        return html
     
     def get_comments_shares_alt(self, comment_share_parent):
         bot = self.bot
         try:
             html = self.get_html(bot.find_element_by_xpath(comment_share_parent))
             comments = self.search_keyword_in_html("comments", html)
-            print(comments)
             comments = int_from_string(comments)
             shares = self.search_keyword_in_html("shares", html)
-            print(shares)
             shares = int_from_string(shares)
-            print("Comments: ", comments, "Shares: ", shares)
             return (comments, shares)
         except Exception as e:
             print("Error in get_comments_shares_alt: ", str(e))
