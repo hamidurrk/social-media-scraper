@@ -390,5 +390,5 @@ if __name__ == "__main__":
     # non_empty_datetime_refactor("bharatiyajanatapartybjp")
     # update_id_column("bharatiyajanatapartybjp")
     # print_duplicate_rows("bharatiyajanatapartybjp")
-    # remove_rows_greater_than_id("bharatiyajanatapartybjp", 16871)
+    # remove_rows_greater_than_id("bharatiyajanatapartybjp", 34973)
     pass

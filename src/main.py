@@ -221,11 +221,15 @@ class FacebookProfileScraper:
         try:
             html = self.get_html(bot.find_element_by_xpath(comment_share_parent))
             comments = self.search_keyword_in_html("comments", html)
+            print(comments)
             comments = int_from_string(comments)
             shares = self.search_keyword_in_html("shares", html)
+            print(shares)
             shares = int_from_string(shares)
+            print("Comments: ", comments, "Shares: ", shares)
             return (comments, shares)
-        except:
+        except Exception as e:
+            print("Error in get_comments_shares_alt: ", str(e))
             return None
     
     def crawl_timeline(self, start_date_obj = None, end_date_obj = None):
@@ -276,38 +280,14 @@ class FacebookProfileScraper:
                     share_str = f"/html/body/div[1]/div/div/div[1]/div/div[3]/div/div/div[1]/div[1]/div/div/div[4]/div[2]/div/div[2]/div[{j}]/div[{i}]/div/div/div/div/div/div/div/div/div/div/div/div[13]/div/div/div[4]/div/div/div/div/div[1]/div/div[2]/div[3]/span/div/span/span"
                     react_pop_up = "/html/body/div[1]/div/div/div[1]/div/div[4]/div/div/div[1]/div/div[2]/div/div/div/div/div/div/div[1]/div/div[1]/div/div/div/div[2]"
                     react_pop_up_close = "/html/body/div[1]/div/div/div[1]/div/div[4]/div/div/div[1]/div/div[2]/div/div/div/div/div/div/div[1]/div/div[2]/div"
-                    dummy_clicable = "/html/body/div[1]/div/div/div[1]/div/div[3]/div/div/div[1]/div[1]/div/div/div[4]/div[2]/div/div[1]/div[2]/div/div[1]/div/div/div/div/div[1]/div/div/div/div/span/div/div[1]/h2/span/span"             
-
+                    
                     anchor_scroll_element = WebDriverWait(bot, 5).until(
                         EC.visibility_of_element_located((By.XPATH, anchor_scroll))
                     )
                     bot.execute_script("window.scrollBy(0, arguments[0].getBoundingClientRect().top - 150);", anchor_scroll_element)              
                     time.sleep(2)
                     
-                    # try:
-                    #     clickable = WebDriverWait(bot, 5).until(
-                    #         EC.element_to_be_clickable((By.XPATH, dummy_clicable))
-                    #     )
-                    #     clickable.click()
-                    # except Exception as e:
-                    #     print("An error occurred while clicking the dummy clickable element:", str(e))
-                    #     pass
-                                    
                     post_date, post_date_obj = self.hover_date_element(date_hover_element, date_hover_box)
-                    
-                    # for k in range(5):
-                    #     try:
-                    #         hover = ActionChains(bot).move_to_element(bot.find_element_by_xpath(date_hover_element))
-                    #         hover.perform()
-                            
-                    #         time.sleep(2)
-                    #         date_hover_box_element = bot.find_element_by_xpath(date_hover_box)
-                    #         post_date = date_hover_box_element.text
-                    #         print("Post date: ", post_date)
-                    #         post_date_obj = parse_facebook_date(post_date)
-                    #         break
-                    #     except Exception as e:
-                    #         print("An error occurred while hovering over the date element:", str(e))
                     
                     if post_date is None:
                         print("No date found")
@@ -483,24 +463,5 @@ with open("C:\\Users\\hamid\\OneDrive\\Documents\\credential.txt", 'r', encoding
     password = f.read()
 
 if __name__ == "__main__":
-    comment_share_parent = f"/html/body/div[1]/div/div/div[1]/div/div[3]/div/div/div[1]/div[1]/div/div/div[4]/div[2]/div/div[2]/div[3]/div[13]/div/div/div/div/div/div/div/div/div/div/div/div[13]/div/div/div[4]/div/div/div[1]/div/div[1]"
-                    
-    scraper = FacebookProfileScraper('hrk.sahil', password, browser="CHROME")         # username of the facebook profile
-    # scraper.main(2010, 5, 30)
-    print(scraper.get_html(scraper.bot.find_element_by_xpath(comment_share_parent)))
-    
-    # i = 8
-    # j = 2
-    # post_box = f"/html/body/div[1]/div/div/div[1]/div/div[3]/div/div/div[1]/div[1]/div/div/div[4]/div[2]/div/div[2]/div[{j}]/div[{i}]/div/div/div/div/div/div/div/div/div/div/div/div[13]/div/div/div[3]/div[1]/div"
-    # anchor_scroll = f"/html/body/div[1]/div/div/div[1]/div/div[3]/div/div/div[1]/div[1]/div/div/div[4]/div[2]/div/div[2]/div[{j}]/div[{i}]/div/div/div/div/div/div/div/div/div/div/div/div[13]/div/div/div[2]/div/div[3]/div/div"
-    # date_hover_element = f"/html/body/div[1]/div/div/div[1]/div/div[3]/div/div/div[1]/div[1]/div/div/div[4]/div[2]/div/div[2]/div[{j}]/div[{i}]/div/div/div/div/div/div/div/div/div/div/div/div[13]/div/div/div[2]/div/div[2]/div/div[2]/span/div/span[1]/span/a"
-    # date_hover_box = f"/html/body/div[1]/div/div/div[1]/div/div[3]/div/div/div[2]/div"
-    # img_box = f"/html/body/div[1]/div/div/div[1]/div/div[3]/div/div/div[1]/div[1]/div/div/div[4]/div[2]/div/div[2]/div[{j}]/div[{i}]/div/div/div/div/div/div/div/div/div/div/div/div[13]/div/div/div[3]/div/div[1]/a/div[1]/div/div/div/img"
-    # img_box_2 = f"/html/body/div[1]/div/div/div[1]/div/div[3]/div/div/div[1]/div[1]/div/div/div[4]/div[2]/div/div[2]/div[{j}]/div[{i}]/div/div/div/div/div/div/div/div/div/div/div/div[13]/div/div/div[3]/div[2]/div[1]/div/div/div"
-    # react_str = f"/html/body/div[1]/div/div/div[1]/div/div[3]/div/div/div[1]/div[1]/div/div/div[4]/div[2]/div/div[2]/div[{j}]/div[{i}]/div/div/div/div/div/div/div/div/div/div/div/div[13]/div/div/div[4]/div/div/div[1]/div/div[1]/div/div[1]/div/span/div/span[2]/span/span"
-    # comment_str = f"/html/body/div[1]/div/div/div[1]/div/div[3]/div/div/div[1]/div[1]/div/div/div[4]/div[2]/div/div[2]/div[{j}]/div[{i}]/div/div/div/div/div/div/div/div/div/div/div/div[13]/div/div/div[4]/div/div/div/div/div[1]/div/div[2]/div[2]/span/div/span/span"
-    # share_str = f"/html/body/div[1]/div/div/div[1]/div/div[3]/div/div/div[1]/div[1]/div/div/div[4]/div[2]/div/div[2]/div[{j}]/div[{i}]/div/div/div/div/div/div/div/div/div/div/div/div[13]/div/div/div[4]/div/div/div/div/div[1]/div/div[2]/div[3]/span/div/span/span"
-    # react_pop_up = "/html/body/div[1]/div/div/div[1]/div/div[4]/div/div/div[1]/div/div[2]/div/div/div/div/div/div/div[1]/div/div[1]/div/div/div/div[2]"
-    # react_pop_up_close = "/html/body/div[1]/div/div/div[1]/div/div[4]/div/div/div[1]/div/div[2]/div/div/div/div/div/div/div[1]/div/div[2]/div"
-    
-    # post_date, post_date_obj = scraper.hover_date_element(date_hover_element, date_hover_box)
+    scraper = FacebookProfileScraper('hrk.sahil', password, browser="CHROME")         
+    scraper.main(2010, 5, 30)
