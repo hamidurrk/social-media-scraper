@@ -503,7 +503,7 @@ class FacebookProfileScraper:
     def main(self, year, month, day):
         start_datetime_obj = parse_facebook_date(get_last_datetime("bharatiyajanatapartybjp"))
         # start_datetime_obj = datetime(2024, 1, 20)
-        end_datetime_obj = datetime(year, month, day)
+        end_datetime_obj = datetime(year, month, day) - timedelta(1)
         name, url = fetch_new_profile("name"), fetch_new_profile("facebook")
         self.navigate_to_profile(name, url)
         self.crawl_timeline(start_date_obj=start_datetime_obj, end_date_obj=end_datetime_obj)
