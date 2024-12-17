@@ -126,7 +126,23 @@ class FacebookProfileScraper:
         done_button = wait.until(EC.element_to_be_clickable((By.XPATH, "/html/body/div[1]/div/div/div[1]/div/div[4]/div/div/div[1]/div/div[2]/div/div/div/div[3]/div[2]/div/div[2]/div[1]")))
         done_button.click()
         time.sleep(3)
-        
+    
+    def get_likes(self, react_str):
+        bot = self.bot
+        reactions = {
+            "All": 0,
+            "Like": 0,
+            "Love": 0,
+            "Care": 0,
+            "Haha": 0,
+            "Wow": 0,
+            "Sad": 0,
+            "Angry": 0
+        }
+        react_str_element = bot.find_element_by_xpath(react_str)
+        reactions["All"] = int_from_string(react_str_element.text)
+        return reactions
+    
     def get_reacts(self, react_str, react_pop_up, react_pop_up_close):
         bot = self.bot
         reactions = {
@@ -139,14 +155,27 @@ class FacebookProfileScraper:
             "Sad": 0,
             "Angry": 0
         }
+        react_str_element = bot.find_element_by_xpath(react_str)
         
-        bot.find_element_by_xpath(react_str).click()
-        WebDriverWait(bot, 10).until(
-            EC.presence_of_element_located((By.XPATH, f"{react_pop_up}"))
-        )
-        time.sleep(1)
-        react_pop_up_element = bot.find_element_by_xpath(react_pop_up)
-        child_elements = react_pop_up_element.find_elements_by_xpath('.//div')
+        try:
+            print(react_str_element.text)
+            react_str_element.click()
+            WebDriverWait(bot, 10).until(
+                EC.presence_of_element_located((By.XPATH, f"{react_pop_up}"))
+            )
+            time.sleep(1)
+            react_pop_up_element = bot.find_element_by_xpath(react_pop_up)
+            child_elements = react_pop_up_element.find_elements_by_xpath('.//div')
+        except Exception as e:
+            print("React pop-up not found: ", str(e))
+            print("Getting the total reacts from the main page")
+            wait = WebDriverWait(bot, 5)
+            close_button = wait.until(EC.element_to_be_clickable((By.XPATH, "//div[@aria-label='Close' and @role='button']")))
+            close_button.click()
+            time.sleep(1)
+            reactions["All"] = int_from_string(react_str_element.text)
+            return reactions
+        
         for child in child_elements:
             aria_label = child.get_attribute("aria-label")
             if not aria_label == None:
@@ -281,7 +310,7 @@ class FacebookProfileScraper:
                         EC.visibility_of_element_located((By.XPATH, anchor_scroll))
                     )
                     bot.execute_script("window.scrollBy(0, arguments[0].getBoundingClientRect().top - 150);", anchor_scroll_element)              
-                    time.sleep(2)
+                    time.sleep(1)
                     
                     post_date, post_date_obj = self.hover_date_element(date_hover_element, date_hover_box)
                     
@@ -385,8 +414,10 @@ class FacebookProfileScraper:
                         except Exception as e:
                             # print("Shares: 0")
                             pass
-                    
-                    reactions = self.get_reacts(react_str, react_pop_up, react_pop_up_close)
+                    if post_date_obj.date() < datetime(2016, 2, 22).date():
+                        reactions = self.get_likes(react_str)
+                    else:
+                        reactions = self.get_reacts(react_str, react_pop_up, react_pop_up_close)
                                 
                     print("\n"*2)
                     print("Date of post: ", post_date, 
