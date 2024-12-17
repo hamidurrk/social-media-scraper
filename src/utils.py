@@ -61,9 +61,18 @@ def parse_facebook_date(date_str):
     date_format = "%A %d %B %Y at %H:%M"
     return datetime.strptime(date_str, date_format)
 
-def create_facebook_date(date_obj):
-    date_format = "%A %d %B %Y at %H:%M"
+def custom_strftime(date_obj):
+    # Custom date format without leading zeroes for the day of the month
+    date_format = "%A %-d %B %Y at %H:%M"
+    
+    # For Windows compatibility, use an alternative approach
+    if os.name == 'nt':
+        date_format = date_format.replace('%-d', str(date_obj.day))
+    
     return date_obj.strftime(date_format)
+
+def create_facebook_date(date_obj):
+    return custom_strftime(date_obj)
 
 def compare_dates(date_str1, date_str2):
     date1 = datetime.strptime(date_str1, "%A, %b %d, %Y")

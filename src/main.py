@@ -95,7 +95,7 @@ class FacebookProfileScraper:
                 time.sleep(timeout)
                 print("Creating artificial date.")
                 last_datetime_obj = parse_facebook_date(get_last_datetime("bharatiyajanatapartybjp"))
-                artificial_date_obj = last_datetime_obj - timedelta(hours=1)
+                artificial_date_obj = last_datetime_obj - timedelta(minutes=7)
                 artificial_date = create_facebook_date(artificial_date_obj)
                 print(f"Artificial date: {artificial_date}")
                 return artificial_date, artificial_date_obj
@@ -242,6 +242,7 @@ class FacebookProfileScraper:
             
             error_count = 0
             i = 0
+            close_button_exception = True
             while True:
                 try:
                     i += 1
@@ -284,6 +285,8 @@ class FacebookProfileScraper:
                     
                     post_date, post_date_obj = self.hover_date_element(date_hover_element, date_hover_box)
                     
+                    print("Post date: ", post_date)
+                    
                     if post_date is None:
                         print("No date found")
                         continue
@@ -292,6 +295,8 @@ class FacebookProfileScraper:
                         continue
                     if not post_date_obj.date() == current_date_obj.date():
                         print(post_date_obj.date(), current_date_obj.date(), "not equal")
+                        wrt = "Continuing to next date"
+                        print(wrt.center(70, "-"))
                         break
                     
                     try:
@@ -437,8 +442,26 @@ class FacebookProfileScraper:
                     print("An error occurred in the main loop: ", str(e))
                     # bot.refresh()
                     error_count += 1
-                    if error_count >= 10:
-                        bot.refresh()
+                    if error_count >= 2:
+                        if close_button_exception:
+                            try:
+                                bot.find_element_by_xpath("/html/body/div[1]/div/div/div[1]/div/div[4]/div/div/div[1]/div/div[2]/div/div/div/div/div/div/div[1]/div/div").click()
+                                i -= (error_count - 1)
+                                error_count = 0
+                            except:
+                                close_button_exception = False
+                        else:
+                            bot.refresh()
+                            time.sleep(2)
+                            current_date_obj = start_date_obj - timedelta(n)
+                            print(current_date_obj.year, current_date_obj.strftime("%B"), current_date_obj.day)
+                                            
+                            filter_button = "/html/body/div[1]/div/div/div[1]/div/div[3]/div/div/div[1]/div[1]/div/div/div[4]/div[2]/div/div[2]/div[2]/div/div/div/div[2]/div/div/div"
+                            self.post_filter(filter_button, current_date_obj.year, current_date_obj.strftime("%B"), current_date_obj.day)
+                            time.sleep(2)
+                            
+                            i = 0
+                            error_count = 0
                     continue
         gen_prompt("Crawl ended", char="#")
         print("\n"*2)

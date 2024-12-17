@@ -152,6 +152,7 @@ def remove_rows_greater_than_id(table_name, target_id):
                 break
             c.execute(f"DELETE FROM {table_name} WHERE id > ?", (target_id,))
             conn.commit()
+            count += 1
         print(f"{count} rows with ID greater than {target_id} have been deleted.")
     except sqlite3.Error as e:
         print(f"Error deleting rows: {e}")
@@ -390,5 +391,5 @@ if __name__ == "__main__":
     # non_empty_datetime_refactor("bharatiyajanatapartybjp")
     # update_id_column("bharatiyajanatapartybjp")
     # print_duplicate_rows("bharatiyajanatapartybjp")
-    # remove_rows_greater_than_id("bharatiyajanatapartybjp", 34973)
+    remove_rows_greater_than_id("bharatiyajanatapartybjp", 35092)
     pass
