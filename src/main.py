@@ -282,15 +282,10 @@ class FacebookProfileScraper:
                     print(wrt.center(70, "-"))
                     
                     anchor_scroll = f"/html/body/div[1]/div/div/div[1]/div/div[3]/div/div/div[1]/div[1]/div/div/div[4]/div[2]/div/div[2]/div[{j}]/div[{i}]/div/div/div/div/div/div/div/div/div/div/div/div[13]/div/div/div[2]/div/div[3]/div/div"
-                                    #   /html/body/div[1]/div/div/div[1]/div/div[3]/div/div/div[1]/div[1]/div/div/div[4]/div[2]/div/div[2]/div[2]  /div[1]  /div/div/div/div/div/div/div/div/div/div/div/div[13]/div/div/div[2]/div/div[3]/div/div
                     try:
                         anchor_scroll_element = bot.find_element_by_xpath(anchor_scroll)
                     except:
                         # print({"error": "anchor_scroll_element not found"})
-                        for _ in range(1):
-                            # ActionChains(bot).send_keys(Keys.PAGE_DOWN).perform()
-                            # time.sleep(2)
-                            pass
                         j = 3
                     
                     post_box = f"/html/body/div[1]/div/div/div[1]/div/div[3]/div/div/div[1]/div[1]/div/div/div[4]/div[2]/div/div[2]/div[{j}]/div[{i}]/div/div/div/div/div/div/div/div/div/div/div/div[13]/div/div/div[3]/div[1]/div"
@@ -400,19 +395,15 @@ class FacebookProfileScraper:
                             print(bot.find_element_by_xpath(comment_str).text)
                             comments = int_from_string(bot.find_element_by_xpath(comment_str).text)
                             if (comments != None):
-                                # print ("Comments: "+ str(comments))
                                 pass
                         except Exception as e:
-                            # print("Comments: error")
                             pass
 
                         try:
                             shares = int_from_string(bot.find_element_by_xpath(share_str).text)
                             if (shares != None):
-                                # print ("Shares: "+ str(shares))
                                 pass
                         except Exception as e:
-                            # print("Shares: 0")
                             pass
                     if post_date_obj.date() < datetime(2016, 2, 22).date():
                         reactions = self.get_likes(react_str)
@@ -471,7 +462,6 @@ class FacebookProfileScraper:
                                     angry=data['angry'])              
                 except Exception as e:
                     print("An error occurred in the main loop: ", str(e))
-                    # bot.refresh()
                     error_count += 1
                     if error_count >= 2:
                         if close_button_exception:
@@ -502,7 +492,6 @@ class FacebookProfileScraper:
         
     def main(self, year, month, day):
         start_datetime_obj = parse_facebook_date(get_last_datetime("bharatiyajanatapartybjp"))
-        # start_datetime_obj = datetime(2024, 1, 20)
         end_datetime_obj = datetime(year, month, day) - timedelta(1)
         name, url = fetch_new_profile("name"), fetch_new_profile("facebook")
         self.navigate_to_profile(name, url)
