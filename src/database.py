@@ -380,7 +380,7 @@ if __name__ == "__main__":
     # add_column("ipplist", "flag", "INTEGER")
     # data = fetch_new_profile("facebook")
     # print(data)
-    # create_profile_table("Bharatiya Janata Party (BJP)")
+    # create_profile_table("Indian National Congress")
 
     # remove_rows_below_wordcount_threshold("bharatiyajanatapartybjp", 1)
     # remove_last_n_rows("bharatiyajanatapartybjp", 1)
@@ -391,5 +391,5 @@ if __name__ == "__main__":
     # non_empty_datetime_refactor("bharatiyajanatapartybjp")
     # update_id_column("bharatiyajanatapartybjp")
     # print_duplicate_rows("bharatiyajanatapartybjp")
-    remove_rows_greater_than_id("bharatiyajanatapartybjp", 35092)
+    # remove_rows_greater_than_id("bharatiyajanatapartybjp", 35092)
     pass

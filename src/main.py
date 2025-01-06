@@ -14,7 +14,7 @@ from database import *
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 DATABASE_PATH = os.path.join(BASE_DIR, "data", "dbfiles",'ipp.db')
-IMAGE_DOWNLOAD_PATH = os.path.join(BASE_DIR, "data", "img")
+IMAGE_DOWNLOAD_PATH = os.path.join(BASE_DIR, "data", "indiannationalcongress_img")
 conn = sqlite3.connect(DATABASE_PATH)
 
 class FacebookProfileScraper:
@@ -94,7 +94,7 @@ class FacebookProfileScraper:
                 print(f"Attempt {attempt + 1} failed: {e}")
                 time.sleep(timeout)
                 print("Creating artificial date.")
-                last_datetime_obj = parse_facebook_date(get_last_datetime("bharatiyajanatapartybjp"))
+                last_datetime_obj = parse_facebook_date(get_last_datetime("indiannationalcongress"))
                 artificial_date_obj = last_datetime_obj - timedelta(minutes=7)
                 artificial_date = create_facebook_date(artificial_date_obj)
                 print(f"Artificial date: {artificial_date}")
@@ -243,6 +243,12 @@ class FacebookProfileScraper:
         html = bot.execute_script("return arguments[0].innerHTML;", element)
         return html
     
+    def perform_pagedown(self, n):
+        bot = self.bot
+        for i in range(n):
+            ActionChains(bot).send_keys(Keys.PAGE_DOWN).perform()
+            time.sleep(1)
+    
     def get_comments_shares_alt(self, comment_share_parent):
         bot = self.bot
         try:
@@ -269,13 +275,13 @@ class FacebookProfileScraper:
             self.post_filter(filter_button, current_date_obj.year, current_date_obj.strftime("%B"), current_date_obj.day)
             time.sleep(2)
             
-            error_count = 0
             i = 0
             close_button_exception = True
             while True:
                 try:
                     i += 1
                     j = 2
+                    error_count = 0
                     post_date = None
                     post_date_obj = None
                     wrt = "Post no: " + str(i) + " "
@@ -314,14 +320,17 @@ class FacebookProfileScraper:
                     if post_date is None:
                         print("No date found")
                         continue
-                    if check_if_datetime_exists("bharatiyajanatapartybjp", post_date):
-                        print("Post already scraped: ", post_date)
-                        continue
+                    
+                    print(post_date_obj.date(), current_date_obj.date())
                     if not post_date_obj.date() == current_date_obj.date():
                         print(post_date_obj.date(), current_date_obj.date(), "not equal")
                         wrt = "Continuing to next date"
                         print(wrt.center(70, "-"))
                         break
+                    
+                    if check_if_datetime_exists("indiannationalcongress", post_date):
+                        print("Post already scraped: ", post_date)
+                        continue
                     
                     try:
                         post_element = bot.find_element_by_xpath(post_box)
@@ -445,7 +454,7 @@ class FacebookProfileScraper:
                         'angry': reactions["Angry"]
                     }
                     
-                    insert_to_table("Bharatiya Janata Party (BJP)",
+                    insert_to_table("Indian National Congress",
                                     datetime=data['datetime'],
                                     post_text=data['post_text'],
                                     img_link=data['img_link'],
@@ -461,9 +470,10 @@ class FacebookProfileScraper:
                                     sad=data['sad'],
                                     angry=data['angry'])              
                 except Exception as e:
-                    print("An error occurred in the main loop: ", str(e))
+                    print("An error occurred in the main loop: ", e)
+                    self.perform_pagedown(2)
                     error_count += 1
-                    if error_count >= 2:
+                    if error_count >= 10:
                         if close_button_exception:
                             try:
                                 bot.find_element_by_xpath("/html/body/div[1]/div/div/div[1]/div/div[4]/div/div/div[1]/div/div[2]/div/div/div/div/div/div/div[1]/div/div").click()
@@ -491,9 +501,11 @@ class FacebookProfileScraper:
         print("\n"*2)
         
     def main(self, year, month, day):
-        start_datetime_obj = parse_facebook_date(get_last_datetime("bharatiyajanatapartybjp"))
+        start_datetime_obj = parse_facebook_date(get_last_datetime("indiannationalcongress"))
+        # start_datetime_obj = datetime(2025, 1, 3)
         end_datetime_obj = datetime(year, month, day) - timedelta(1)
-        name, url = fetch_new_profile("name"), fetch_new_profile("facebook")
+        # name, url = fetch_new_profile("name"), fetch_new_profile("facebook")
+        name, url = "Indian National Congress", "https://www.facebook.com/IndianNationalCongress"
         self.navigate_to_profile(name, url)
         self.crawl_timeline(start_date_obj=start_datetime_obj, end_date_obj=end_datetime_obj)
               
