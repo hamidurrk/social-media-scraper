@@ -3,3 +3,4 @@ data/dbfiles
 data/img
 data
 media
+src/__pycache__
