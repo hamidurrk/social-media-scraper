@@ -471,7 +471,7 @@ class FacebookProfileScraper:
                                     angry=data['angry'])              
                 except Exception as e:
                     print("An error occurred in the main loop: ", e)
-                    self.perform_pagedown(2)
+                    self.perform_pagedown(1)
                     error_count += 1
                     if error_count >= 10:
                         if close_button_exception:
