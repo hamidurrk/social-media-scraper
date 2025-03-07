@@ -18,7 +18,7 @@ IMAGE_DOWNLOAD_PATH = os.path.join(BASE_DIR, "data", "indiannationalcongress_img
 conn = sqlite3.connect(DATABASE_PATH)
 
 class FacebookProfileScraper:
-    def __init__(self, username, password, browser="CHROME"):
+    def __init__(self, username, password, browser="CHROME", operating_system="WINDOWS"):
         self.username = username
         self.password = password
         gen_prompt("Facebook Profile Scraper (for research use only)")
@@ -26,13 +26,16 @@ class FacebookProfileScraper:
         firefox_options.add_argument("--devtools")
         if (browser == "FIREFOX"):
             self.bot = webdriver.Firefox(executable_path=GeckoDriverManager().install(), service_args = ['--marionette-port', '2828', '--connect-existing'], options=firefox_options)
-        elif (browser == "CHROME"):
+        elif (browser.upper() == "CHROME"):
             chrome_options = Options()
             chrome_options.add_experimental_option("debuggerAddress", "localhost:9222")
             chrome_install = ChromeDriverManager().install()
-            folder = os.path.dirname(chrome_install)
-            chromedriver_path = os.path.join(folder, "chromedriver.exe")
-            self.bot = webdriver.Chrome(executable_path=chromedriver_path, options=chrome_options)
+            if operating_system == "UBUNTU":
+                self.bot = webdriver.Chrome(executable_path=chrome_install, options=chrome_options)
+            elif operating_system == "WINDOWS":
+                folder = os.path.dirname(chrome_install)
+                chromedriver_path = os.path.join(folder, "chromedriver.exe")
+                self.bot = webdriver.Chrome(executable_path=chromedriver_path, options=chrome_options)
         
         # self.bot.set_window_position(0, 0) 
         # self.bot.set_window_size(960, 1043)
@@ -513,5 +516,5 @@ with open("C:\\Users\\hamid\\OneDrive\\Documents\\credential.txt", 'r', encoding
     password = f.read()
 
 if __name__ == "__main__":
-    scraper = FacebookProfileScraper('hrk.sahil', password, browser="CHROME")         
+    scraper = FacebookProfileScraper('hrk.sahil', password)         
     scraper.main(2010, 5, 30)
