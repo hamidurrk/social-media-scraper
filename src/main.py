@@ -1,5 +1,6 @@
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
+from selenium.webdriver.chrome.service import Service
 import time, sqlite3, sys, os, hashlib
 from webdriver_manager.firefox import GeckoDriverManager
 from webdriver_manager.chrome import ChromeDriverManager
@@ -11,6 +12,7 @@ from selenium.webdriver.common.by import By
 from datetime import datetime, timedelta
 from utils import *
 from database import *
+
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 DATABASE_PATH = os.path.join(BASE_DIR, "data", "dbfiles",'ipp.db')
@@ -30,6 +32,7 @@ class FacebookProfileScraper:
             chrome_options = Options()
             chrome_options.add_experimental_option("debuggerAddress", "localhost:9222")
             chrome_install = ChromeDriverManager().install()
+            print(chrome_install)
             if operating_system == "UBUNTU":
                 self.bot = webdriver.Chrome(executable_path=chrome_install, options=chrome_options)
             elif operating_system == "WINDOWS":
@@ -512,9 +515,9 @@ class FacebookProfileScraper:
         self.navigate_to_profile(name, url)
         self.crawl_timeline(start_date_obj=start_datetime_obj, end_date_obj=end_datetime_obj)
               
-with open("C:\\Users\\hamid\\OneDrive\\Documents\\credential.txt", 'r', encoding='utf-8') as f:     
-    password = f.read()
+# with open("C:\\Users\\hamid\\OneDrive\\Documents\\credential.txt", 'r', encoding='utf-8') as f:     
+#     password = f.read()
 
 if __name__ == "__main__":
-    scraper = FacebookProfileScraper('hrk.sahil', password)         
+    scraper = FacebookProfileScraper('hrk.sahil', "password", operating_system="UBUNTU")         
     scraper.main(2010, 5, 30)
