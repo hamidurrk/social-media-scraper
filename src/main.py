@@ -12,7 +12,7 @@ from selenium.webdriver.common.by import By
 from datetime import datetime, timedelta
 from utils import *
 from database import *
-
+import traceback
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 DATABASE_PATH = os.path.join(BASE_DIR, "data", "dbfiles",'ipp.db')
@@ -129,7 +129,7 @@ class FacebookProfileScraper:
         day_option = wait.until(EC.element_to_be_clickable((By.XPATH, f"//div[@role='option']//span[text()='{day}']")))
         day_option.click()
         
-        done_button = wait.until(EC.element_to_be_clickable((By.XPATH, "/html/body/div[1]/div/div/div[1]/div/div[4]/div/div/div[1]/div/div[2]/div/div/div/div[3]/div[2]/div/div[2]/div[1]")))
+        done_button = wait.until(EC.element_to_be_clickable((By.XPATH, "/html/body/div[1]/div/div[1]/div/div[4]/div/div/div[1]/div/div[2]/div/div/div/div[3]/div[2]/div/div[2]/div[1]")))
         done_button.click()
         time.sleep(3)
     
@@ -253,7 +253,7 @@ class FacebookProfileScraper:
         bot = self.bot
         for i in range(n):
             ActionChains(bot).send_keys(Keys.PAGE_DOWN).perform()
-            time.sleep(1)
+            time.sleep(0.5)
     
     def get_comments_shares_alt(self, comment_share_parent):
         bot = self.bot
@@ -271,13 +271,14 @@ class FacebookProfileScraper:
     def crawl_timeline(self, start_date_obj = None, end_date_obj = None):
         bot = self.bot
         print(int((start_date_obj - end_date_obj).days), "days to crawl")
+        filter_button = "/html/body/div[1]/div/div[1]/div/div[3]/div/div/div[1]/div[1]/div/div/div[4]/div[2]/div/div[2]/div[2]/div/div/div/div[2]/div/div/div"
         for n in range(int((start_date_obj - end_date_obj).days)):
             bot.refresh()
             time.sleep(2)
             current_date_obj = start_date_obj - timedelta(n)
             print(current_date_obj.year, current_date_obj.strftime("%B"), current_date_obj.day)
                              
-            filter_button = "/html/body/div[1]/div/div/div[1]/div/div[3]/div/div/div[1]/div[1]/div/div/div[4]/div[2]/div/div[2]/div[2]/div/div/div/div[2]/div/div/div"
+            # filter_button = "/html/body/div[1]/div/div/div[1]/div/div[3]/div/div/div[1]/div[1]/div/div/div[4]/div[2]/div/div[2]/div[2]/div/div/div/div[2]/div/div/div"
             self.post_filter(filter_button, current_date_obj.year, current_date_obj.strftime("%B"), current_date_obj.day)
             time.sleep(2)
             
@@ -286,38 +287,44 @@ class FacebookProfileScraper:
             while True:
                 try:
                     i += 1
-                    j = 2
+                    j = 3
                     error_count = 0
                     post_date = None
                     post_date_obj = None
                     wrt = "Post no: " + str(i) + " "
                     print(wrt.center(70, "-"))
                     
-                    anchor_scroll = f"/html/body/div[1]/div/div/div[1]/div/div[3]/div/div/div[1]/div[1]/div/div/div[4]/div[2]/div/div[2]/div[{j}]/div[{i}]/div/div/div/div/div/div/div/div/div/div/div/div[13]/div/div/div[2]/div/div[3]/div/div"
+                    # anchor_scroll = f"/html/body/div[1]/div/div/div[1]/div/div[3]/div/div/div[1]/div[1]/div/div/div[4]/div[2]/div/div[2]/div[{j}]/div[{i}]/div/div/div/div/div/div/div/div/div/div/div/div[13]/div/div/div[2]/div/div[3]/div/div"
+                    # try:
+                    #     anchor_scroll_element = bot.find_element_by_xpath(anchor_scroll)
+                    # except:
+                    #     # print({"error": "anchor_scroll_element not found"})
+                    #     j = 3
+                    # print(j, i)
+                    post_box = f"/html/body/div[1]/div/div[1]/div/div[3]/div/div/div[1]/div[1]/div/div/div[4]/div[2]/div/div[2]/div[{j}]/div[{i}]/div/div/div/div/div/div/div/div/div/div/div/div[13]/div/div/div[3]/div[1]/div"
+                    anchor_scroll = f"/html/body/div[1]/div/div[1]/div/div[3]/div/div/div[1]/div[1]/div/div/div[4]/div[2]/div/div[2]/div[{j}]/div[{i}]/div/div/div/div/div/div/div/div/div/div/div/div[13]/div/div/div[2]/div/div[3]/div/div"
+                                    #  "/html/body/div[1]/div/div[1]/div/div[3]/div/div/div[1]/div[1]/div/div/div[4]/div[2]/div/div[2]/div[3]/div[1]    /div/div/div/div/div/div/div/div/div/div/div/div[13]/div/div/div[2]/div/div[3]/div/div"
+                    date_hover_element = f"/html/body/div[1]/div/div[1]/div/div[3]/div/div/div[1]/div[1]/div/div/div[4]/div[2]/div/div[2]/div[{j}]/div[{i}]/div/div/div/div/div/div/div/div/div/div/div/div[13]/div/div/div[2]/div/div[2]/div/div[2]/span/div/span[1]/span"
+                    date_hover_box = f"/html/body/div[1]/div/div[1]/div/div[3]/div/div/div[2]/div"
+                    img_box = f"/html/body/div[1]/div/div[1]/div/div[3]/div/div/div[1]/div[1]/div/div/div[4]/div[2]/div/div[2]/div[{j}]/div[{i}]/div/div/div/div/div/div/div/div/div/div/div/div[13]/div/div/div[3]/div/div[1]/a/div[1]/div/div/div/img"
+                    img_box_2 = f"/html/body/div[1]/div/div[1]/div/div[3]/div/div/div[1]/div[1]/div/div/div[4]/div[2]/div/div[2]/div[{j}]/div[{i}]/div/div/div/div/div/div/div/div/div/div/div/div[13]/div/div/div[3]/div[2]/div[1]/div/div/div"
+                    react_str = f"/html/body/div[1]/div/div[1]/div/div[3]/div/div/div[1]/div[1]/div/div/div[4]/div[2]/div/div[2]/div[{j}]/div[{i}]/div/div/div/div/div/div/div/div/div/div/div/div[13]/div/div/div[4]/div/div/div[1]/div/div[1]/div/div[1]/div/span/div/span[2]/span/span"
+                                #  "/html/body/div[1]/div/div[1]/div/div[3]/div/div/div[1]/div[1]/div/div/div[4]/div[2]/div/div[2]/div[3]/div[1]/div/div/div/div/div/div/div/div/div/div/div/div[13]/div/div/div[4]/div/div/div[1]/div/div[1]/div/div[1]/div/span/div/span[2]/span/span"
+                    comment_share_parent = f"/html/body/div[1]/div/div[1]/div/div[3]/div/div/div[1]/div[1]/div/div/div[4]/div[2]/div/div[2]/div[{j}]/div[{i}]/div/div/div/div/div/div/div/div/div/div/div/div[13]/div/div/div[4]/div/div/div[1]/div/div[1]"
+                    comment_str = f"/html/body/div[1]/div/div[1]/div/div[3]/div/div/div[1]/div[1]/div/div/div[4]/div[2]/div/div[2]/div[{j}]/div[{i}]/div/div/div/div/div/div/div/div/div/div/div/div[13]/div/div/div[4]/div/div/div/div/div[1]/div/div[2]/div[2]/span/div/span/span"
+                    share_str = f"/html/body/div[1]/div/div[1]/div/div[3]/div/div/div[1]/div[1]/div/div/div[4]/div[2]/div/div[2]/div[{j}]/div[{i}]/div/div/div/div/div/div/div/div/div/div/div/div[13]/div/div/div[4]/div/div/div/div/div[1]/div/div[2]/div[3]/span/div/span/span"
+                    react_pop_up = "/html/body/div[1]/div/div[1]/div/div[4]/div/div/div[1]/div/div[2]/div/div/div/div/div/div/div[1]/div/div[1]/div/div/div/div[2]"
+                    react_pop_up_close = "/html/body/div[1]/div/div[1]/div/div[4]/div/div/div[1]/div/div[2]/div/div/div/div/div/div/div[1]/div/div[2]/div"
                     try:
-                        anchor_scroll_element = bot.find_element_by_xpath(anchor_scroll)
+                        anchor_scroll_element = WebDriverWait(bot, 2).until(
+                            EC.visibility_of_element_located((By.XPATH, anchor_scroll))
+                        )
+                        bot.execute_script("window.scrollBy(0, arguments[0].getBoundingClientRect().top - 150);", anchor_scroll_element)              
+                        time.sleep(1)
                     except:
-                        # print({"error": "anchor_scroll_element not found"})
-                        j = 3
-                    
-                    post_box = f"/html/body/div[1]/div/div/div[1]/div/div[3]/div/div/div[1]/div[1]/div/div/div[4]/div[2]/div/div[2]/div[{j}]/div[{i}]/div/div/div/div/div/div/div/div/div/div/div/div[13]/div/div/div[3]/div[1]/div"
-                    anchor_scroll = f"/html/body/div[1]/div/div/div[1]/div/div[3]/div/div/div[1]/div[1]/div/div/div[4]/div[2]/div/div[2]/div[{j}]/div[{i}]/div/div/div/div/div/div/div/div/div/div/div/div[13]/div/div/div[2]/div/div[3]/div/div"
-                    date_hover_element = f"/html/body/div[1]/div/div/div[1]/div/div[3]/div/div/div[1]/div[1]/div/div/div[4]/div[2]/div/div[2]/div[{j}]/div[{i}]/div/div/div/div/div/div/div/div/div/div/div/div[13]/div/div/div[2]/div/div[2]/div/div[2]/span/div/span[1]/span"
-                    date_hover_box = f"/html/body/div[1]/div/div/div[1]/div/div[3]/div/div/div[2]/div"
-                    img_box = f"/html/body/div[1]/div/div/div[1]/div/div[3]/div/div/div[1]/div[1]/div/div/div[4]/div[2]/div/div[2]/div[{j}]/div[{i}]/div/div/div/div/div/div/div/div/div/div/div/div[13]/div/div/div[3]/div/div[1]/a/div[1]/div/div/div/img"
-                    img_box_2 = f"/html/body/div[1]/div/div/div[1]/div/div[3]/div/div/div[1]/div[1]/div/div/div[4]/div[2]/div/div[2]/div[{j}]/div[{i}]/div/div/div/div/div/div/div/div/div/div/div/div[13]/div/div/div[3]/div[2]/div[1]/div/div/div"
-                    react_str = f"/html/body/div[1]/div/div/div[1]/div/div[3]/div/div/div[1]/div[1]/div/div/div[4]/div[2]/div/div[2]/div[{j}]/div[{i}]/div/div/div/div/div/div/div/div/div/div/div/div[13]/div/div/div[4]/div/div/div[1]/div/div[1]/div/div[1]/div/span/div/span[2]/span/span"
-                    comment_share_parent = f"/html/body/div[1]/div/div/div[1]/div/div[3]/div/div/div[1]/div[1]/div/div/div[4]/div[2]/div/div[2]/div[{j}]/div[{i}]/div/div/div/div/div/div/div/div/div/div/div/div[13]/div/div/div[4]/div/div/div[1]/div/div[1]"
-                    comment_str = f"/html/body/div[1]/div/div/div[1]/div/div[3]/div/div/div[1]/div[1]/div/div/div[4]/div[2]/div/div[2]/div[{j}]/div[{i}]/div/div/div/div/div/div/div/div/div/div/div/div[13]/div/div/div[4]/div/div/div/div/div[1]/div/div[2]/div[2]/span/div/span/span"
-                    share_str = f"/html/body/div[1]/div/div/div[1]/div/div[3]/div/div/div[1]/div[1]/div/div/div[4]/div[2]/div/div[2]/div[{j}]/div[{i}]/div/div/div/div/div/div/div/div/div/div/div/div[13]/div/div/div[4]/div/div/div/div/div[1]/div/div[2]/div[3]/span/div/span/span"
-                    react_pop_up = "/html/body/div[1]/div/div/div[1]/div/div[4]/div/div/div[1]/div/div[2]/div/div/div/div/div/div/div[1]/div/div[1]/div/div/div/div[2]"
-                    react_pop_up_close = "/html/body/div[1]/div/div/div[1]/div/div[4]/div/div/div[1]/div/div[2]/div/div/div/div/div/div/div[1]/div/div[2]/div"
-                    
-                    anchor_scroll_element = WebDriverWait(bot, 5).until(
-                        EC.visibility_of_element_located((By.XPATH, anchor_scroll))
-                    )
-                    bot.execute_script("window.scrollBy(0, arguments[0].getBoundingClientRect().top - 150);", anchor_scroll_element)              
-                    time.sleep(1)
+                        self.perform_pagedown(1)
+                        print("No anchor found. Probably a reel post.")
+                        continue
                     
                     post_date, post_date_obj = self.hover_date_element(date_hover_element, date_hover_box)
                     
@@ -329,10 +336,15 @@ class FacebookProfileScraper:
                     
                     print(post_date_obj.date(), current_date_obj.date())
                     if not post_date_obj.date() == current_date_obj.date():
-                        print(post_date_obj.date(), current_date_obj.date(), "not equal")
-                        wrt = "Continuing to next date"
-                        print(wrt.center(70, "-"))
-                        break
+                        if post_date_obj.date() > current_date_obj.date():
+                            print(post_date_obj.date(), current_date_obj.date(), "future date")
+                            continue
+                        
+                        if post_date_obj.date() < current_date_obj.date():
+                            print(post_date_obj.date(), current_date_obj.date(), "current date exhausted")
+                            wrt = "Continuing to next date"
+                            print(wrt.center(70, "-"))
+                            break
                     
                     if check_if_datetime_exists("indiannationalcongress", post_date):
                         print("Post already scraped: ", post_date)
@@ -476,7 +488,10 @@ class FacebookProfileScraper:
                                     sad=data['sad'],
                                     angry=data['angry'])              
                 except Exception as e:
-                    print("An error occurred in the main loop: ", e)
+                    print("An error occurred in the main loop:")
+                    print("Exception type:", type(e).__name__)
+                    print("Exception message:", str(e))
+                    traceback.print_exc()
                     self.perform_pagedown(1)
                     error_count += 1
                     if error_count >= 10:
@@ -493,7 +508,8 @@ class FacebookProfileScraper:
                             current_date_obj = start_date_obj - timedelta(n)
                             print(current_date_obj.year, current_date_obj.strftime("%B"), current_date_obj.day)
                                             
-                            filter_button = "/html/body/div[1]/div/div/div[1]/div/div[3]/div/div/div[1]/div[1]/div/div/div[4]/div[2]/div/div[2]/div[2]/div/div/div/div[2]/div/div/div"
+                            # filter_button = "/html/body/div[1]/div/div/div[1]/div/div[3]/div/div/div[1]/div[1]/div/div/div[4]/div[2]/div/div[2]/div[2]/div/div/div/div[2]/div/div/div"
+                            # filter_button = "/html/body/div[1]/div/div[1]/div/div[3]/div/div/div[1]/div[1]/div/div/div[4]/div[2]/div/div[2]/div[2]/div/div/div/div[2]/div/div/div"
                             self.post_filter(filter_button, current_date_obj.year, current_date_obj.strftime("%B"), current_date_obj.day)
                             time.sleep(2)
                             
@@ -519,5 +535,5 @@ class FacebookProfileScraper:
 #     password = f.read()
 
 if __name__ == "__main__":
-    scraper = FacebookProfileScraper('hrk.sahil', "password", operating_system="UBUNTU")         
+    scraper = FacebookProfileScraper('hrk.sahil', "password", operating_system="WINDOWS")         
     scraper.main(2010, 5, 30)
