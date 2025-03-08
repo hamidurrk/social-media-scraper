@@ -3,6 +3,7 @@ from bs4 import BeautifulSoup
 from datetime import datetime
 from concurrent.futures import ThreadPoolExecutor
 from tqdm import tqdm
+import random
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
@@ -177,6 +178,13 @@ def loading(i, total):
     sys.stdout.write('\r')
     sys.stdout.write("Poke Progress: | %-50s | %0.2f%% (%d poked)" % ('█' * int(progress/2), progress, i))
     sys.stdout.flush()
+
+def random_wait(time):
+    min_time = time - 1
+    max_time = time + 2
+    if min_time < 0:
+        min_time = 0.1
+    time.sleep(random.uniform(min_time, max_time))
 
 # def wait(duration):
 #     num_iterations = 100

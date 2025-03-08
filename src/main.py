@@ -1,6 +1,5 @@
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
-from selenium.webdriver.chrome.service import Service
 import time, sqlite3, sys, os, hashlib
 from webdriver_manager.firefox import GeckoDriverManager
 from webdriver_manager.chrome import ChromeDriverManager
@@ -55,14 +54,14 @@ class FacebookProfileScraper:
     def login(self):
         bot = self.bot
         bot.get(f"https://www.facebook.com/")
-        time.sleep(1)
+        random_wait(1)
         gen_prompt("Navigated to Facebook", char="#")
         try:
             bot.find_element_by_xpath('//*[@id="email"]').send_keys(self.username)
             gen_prompt("Username Entered")
             bot.find_element_by_xpath('//*[@id="pass"]').send_keys(self.password)
             gen_prompt("Password Entered")
-            time.sleep(1)
+            random_wait(1)
             
             bot.find_element_by_xpath('//*[@id="pass"]').send_keys(Keys.RETURN)
             gen_prompt("Login Requested")
@@ -88,7 +87,7 @@ class FacebookProfileScraper:
                 hover = ActionChains(bot).move_to_element(element)
                 hover.perform()
                 
-                time.sleep(timeout)
+                random_wait(timeout)
                 
                 date_hover_box_element = WebDriverWait(bot, 2).until(
                     EC.visibility_of_element_located((By.XPATH, date_hover_box))
@@ -98,7 +97,7 @@ class FacebookProfileScraper:
                 return post_date, post_date_obj
             except Exception as e:
                 print(f"Attempt {attempt + 1} failed: {e}")
-                time.sleep(timeout)
+                random_wait(timeout)
                 print("Creating artificial date.")
                 last_datetime_obj = parse_facebook_date(get_last_datetime("indiannationalcongress"))
                 artificial_date_obj = last_datetime_obj - timedelta(minutes=7)
@@ -110,34 +109,34 @@ class FacebookProfileScraper:
     def post_filter(self, filter_element, year: int, month: str, day: int):
         bot = self.bot
         bot.find_element_by_xpath(filter_element).click()
-        time.sleep(2)
+        random_wait(2)
         
         wait = WebDriverWait(bot, 5)
         
         year_dropdown = wait.until(EC.element_to_be_clickable((By.XPATH, "//div[@role='combobox']//span[text()='Year']")))
         year_dropdown.click()
-        time.sleep(1)
+        random_wait(1)
         year_option = wait.until(EC.element_to_be_clickable((By.XPATH, f"//div[@role='option']//span[text()='{year}']")))
         year_option.click()
-        time.sleep(1)
+        random_wait(1)
         
         month_dropdown = wait.until(EC.element_to_be_clickable((By.XPATH, "//div[@role='combobox']//span[text()='Month']")))
         month_dropdown.click()
-        time.sleep(1)
+        random_wait(1)
         month_option = wait.until(EC.element_to_be_clickable((By.XPATH, f"//div[@role='option']//span[text()='{month}']")))
         month_option.click()
-        time.sleep(1)
+        random_wait(1)
         
         day_dropdown = wait.until(EC.element_to_be_clickable((By.XPATH, "//div[@role='combobox']//span[text()='Day']")))
         day_dropdown.click()
-        time.sleep(1)
+        random_wait(1)
         day_option = wait.until(EC.element_to_be_clickable((By.XPATH, f"//div[@role='option']//span[text()='{day}']")))
         day_option.click()
-        time.sleep(1)
+        random_wait(1)
         
         done_button = wait.until(EC.element_to_be_clickable((By.XPATH, "/html/body/div[1]/div/div[1]/div/div[4]/div/div/div[1]/div/div[2]/div/div/div/div[3]/div[2]/div/div[2]/div[1]")))
         done_button.click()
-        time.sleep(3)
+        random_wait(3)
     
     def get_likes(self, react_str):
         bot = self.bot
@@ -175,7 +174,7 @@ class FacebookProfileScraper:
             WebDriverWait(bot, 10).until(
                 EC.presence_of_element_located((By.XPATH, f"{react_pop_up}"))
             )
-            time.sleep(1)
+            random_wait(1)
             react_pop_up_element = bot.find_element_by_xpath(react_pop_up)
             child_elements = react_pop_up_element.find_elements_by_xpath('.//div')
         except Exception as e:
@@ -184,7 +183,7 @@ class FacebookProfileScraper:
             wait = WebDriverWait(bot, 5)
             close_button = wait.until(EC.element_to_be_clickable((By.XPATH, "//div[@aria-label='Close' and @role='button']")))
             close_button.click()
-            time.sleep(1)
+            random_wait(1)
             reactions["All"] = int_from_string(react_str_element.text)
             return reactions
         
@@ -208,7 +207,7 @@ class FacebookProfileScraper:
                 react_dropdown.click()
             except:
                 pass
-            time.sleep(1)
+            random_wait(1)
             for i in range(1, 10):
                 try:
                     label_div = f"/html/body/div[1]/div/div/div[1]/div/div[4]/div/div/div[1]/div/div[2]/div/div/div/div/div/div/div[1]/div/div[1]/div/div/div/div[2]/div[{i}]"
@@ -259,7 +258,7 @@ class FacebookProfileScraper:
         bot = self.bot
         for i in range(n):
             ActionChains(bot).send_keys(Keys.PAGE_DOWN).perform()
-            time.sleep(0.5)
+            random_wait(0.5)
     
     def get_comments_shares_alt(self, comment_share_parent):
         bot = self.bot
@@ -280,13 +279,13 @@ class FacebookProfileScraper:
         filter_button = "/html/body/div[1]/div/div[1]/div/div[3]/div/div/div[1]/div[1]/div/div/div[4]/div[2]/div/div[2]/div[2]/div/div/div/div[2]/div/div/div"
         for n in range(int((start_date_obj - end_date_obj).days)):
             bot.refresh()
-            time.sleep(2)
+            random_wait(2)
             current_date_obj = start_date_obj - timedelta(n)
             print(current_date_obj.year, current_date_obj.strftime("%B"), current_date_obj.day)
                              
             # filter_button = "/html/body/div[1]/div/div/div[1]/div/div[3]/div/div/div[1]/div[1]/div/div/div[4]/div[2]/div/div[2]/div[2]/div/div/div/div[2]/div/div/div"
             self.post_filter(filter_button, current_date_obj.year, current_date_obj.strftime("%B"), current_date_obj.day)
-            time.sleep(2)
+            random_wait(2)
             
             i = 0
             close_button_exception = True
@@ -326,7 +325,7 @@ class FacebookProfileScraper:
                             EC.visibility_of_element_located((By.XPATH, anchor_scroll))
                         )
                         bot.execute_script("window.scrollBy(0, arguments[0].getBoundingClientRect().top - 150);", anchor_scroll_element)              
-                        time.sleep(1)
+                        random_wait(1)
                     except:
                         self.perform_pagedown(1)
                         print("No anchor found. Probably a reel post.")
@@ -408,7 +407,7 @@ class FacebookProfileScraper:
                     try:
                         for url in img_src_list:
                             hash_object = hashlib.sha256(url.encode())
-                            time.sleep(0.5)
+                            random_wait(0.5)
                             filename = hash_object.hexdigest() + ".jpg"
                             img_tags.append(filename)
                     except Exception as e:
@@ -510,14 +509,14 @@ class FacebookProfileScraper:
                                 close_button_exception = False
                         else:
                             bot.refresh()
-                            time.sleep(2)
+                            random_wait(2)
                             current_date_obj = start_date_obj - timedelta(n)
                             print(current_date_obj.year, current_date_obj.strftime("%B"), current_date_obj.day)
                                             
                             # filter_button = "/html/body/div[1]/div/div/div[1]/div/div[3]/div/div/div[1]/div[1]/div/div/div[4]/div[2]/div/div[2]/div[2]/div/div/div/div[2]/div/div/div"
                             # filter_button = "/html/body/div[1]/div/div[1]/div/div[3]/div/div/div[1]/div[1]/div/div/div[4]/div[2]/div/div[2]/div[2]/div/div/div/div[2]/div/div/div"
                             self.post_filter(filter_button, current_date_obj.year, current_date_obj.strftime("%B"), current_date_obj.day)
-                            time.sleep(2)
+                            random_wait(2)
                             
                             i = 0
                             error_count = 0
