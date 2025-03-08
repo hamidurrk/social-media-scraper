@@ -179,9 +179,9 @@ def loading(i, total):
     sys.stdout.write("Poke Progress: | %-50s | %0.2f%% (%d poked)" % ('█' * int(progress/2), progress, i))
     sys.stdout.flush()
 
-def random_wait(time):
-    min_time = time - 1
-    max_time = time + 2
+def random_wait(t):
+    min_time = t - 1
+    max_time = t + 2
     if min_time < 0:
         min_time = 0.1
     time.sleep(random.uniform(min_time, max_time))

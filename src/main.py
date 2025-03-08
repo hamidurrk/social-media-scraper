@@ -174,7 +174,7 @@ class FacebookProfileScraper:
             WebDriverWait(bot, 10).until(
                 EC.presence_of_element_located((By.XPATH, f"{react_pop_up}"))
             )
-            random_wait(1)
+            random_wait(2)
             react_pop_up_element = bot.find_element_by_xpath(react_pop_up)
             child_elements = react_pop_up_element.find_elements_by_xpath('.//div')
         except Exception as e:
@@ -183,7 +183,7 @@ class FacebookProfileScraper:
             wait = WebDriverWait(bot, 5)
             close_button = wait.until(EC.element_to_be_clickable((By.XPATH, "//div[@aria-label='Close' and @role='button']")))
             close_button.click()
-            random_wait(1)
+            random_wait(2)
             reactions["All"] = int_from_string(react_str_element.text)
             return reactions
         
@@ -207,7 +207,7 @@ class FacebookProfileScraper:
                 react_dropdown.click()
             except:
                 pass
-            random_wait(1)
+            random_wait(2)
             for i in range(1, 10):
                 try:
                     label_div = f"/html/body/div[1]/div/div/div[1]/div/div[4]/div/div/div[1]/div/div[2]/div/div/div/div/div/div/div[1]/div/div[1]/div/div/div/div[2]/div[{i}]"
@@ -279,13 +279,13 @@ class FacebookProfileScraper:
         filter_button = "/html/body/div[1]/div/div[1]/div/div[3]/div/div/div[1]/div[1]/div/div/div[4]/div[2]/div/div[2]/div[2]/div/div/div/div[2]/div/div/div"
         for n in range(int((start_date_obj - end_date_obj).days)):
             bot.refresh()
-            random_wait(2)
+            random_wait(10)
             current_date_obj = start_date_obj - timedelta(n)
             print(current_date_obj.year, current_date_obj.strftime("%B"), current_date_obj.day)
                              
             # filter_button = "/html/body/div[1]/div/div/div[1]/div/div[3]/div/div/div[1]/div[1]/div/div/div[4]/div[2]/div/div[2]/div[2]/div/div/div/div[2]/div/div/div"
             self.post_filter(filter_button, current_date_obj.year, current_date_obj.strftime("%B"), current_date_obj.day)
-            random_wait(2)
+            random_wait(8)
             
             i = 0
             close_button_exception = True
@@ -325,7 +325,7 @@ class FacebookProfileScraper:
                             EC.visibility_of_element_located((By.XPATH, anchor_scroll))
                         )
                         bot.execute_script("window.scrollBy(0, arguments[0].getBoundingClientRect().top - 150);", anchor_scroll_element)              
-                        random_wait(1)
+                        random_wait(5)
                     except:
                         self.perform_pagedown(1)
                         print("No anchor found. Probably a reel post.")
@@ -407,7 +407,7 @@ class FacebookProfileScraper:
                     try:
                         for url in img_src_list:
                             hash_object = hashlib.sha256(url.encode())
-                            random_wait(0.5)
+                            time.sleep(0.5)
                             filename = hash_object.hexdigest() + ".jpg"
                             img_tags.append(filename)
                     except Exception as e:
