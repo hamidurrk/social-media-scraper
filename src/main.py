@@ -116,18 +116,24 @@ class FacebookProfileScraper:
         
         year_dropdown = wait.until(EC.element_to_be_clickable((By.XPATH, "//div[@role='combobox']//span[text()='Year']")))
         year_dropdown.click()
+        time.sleep(1)
         year_option = wait.until(EC.element_to_be_clickable((By.XPATH, f"//div[@role='option']//span[text()='{year}']")))
         year_option.click()
+        time.sleep(1)
         
         month_dropdown = wait.until(EC.element_to_be_clickable((By.XPATH, "//div[@role='combobox']//span[text()='Month']")))
         month_dropdown.click()
+        time.sleep(1)
         month_option = wait.until(EC.element_to_be_clickable((By.XPATH, f"//div[@role='option']//span[text()='{month}']")))
         month_option.click()
+        time.sleep(1)
         
         day_dropdown = wait.until(EC.element_to_be_clickable((By.XPATH, "//div[@role='combobox']//span[text()='Day']")))
         day_dropdown.click()
+        time.sleep(1)
         day_option = wait.until(EC.element_to_be_clickable((By.XPATH, f"//div[@role='option']//span[text()='{day}']")))
         day_option.click()
+        time.sleep(1)
         
         done_button = wait.until(EC.element_to_be_clickable((By.XPATH, "/html/body/div[1]/div/div[1]/div/div[4]/div/div/div[1]/div/div[2]/div/div/div/div[3]/div[2]/div/div[2]/div[1]")))
         done_button.click()
@@ -535,5 +541,5 @@ class FacebookProfileScraper:
 #     password = f.read()
 
 if __name__ == "__main__":
-    scraper = FacebookProfileScraper('hrk.sahil', "password", operating_system="WINDOWS")         
+    scraper = FacebookProfileScraper('hrk.sahil', "password", operating_system="UBUNTU")         
     scraper.main(2010, 5, 30)
