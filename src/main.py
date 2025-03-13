@@ -540,9 +540,6 @@ class FacebookProfileScraper:
         name, url = "Indian National Congress", "https://www.facebook.com/IndianNationalCongress"
         self.navigate_to_profile(name, url)
         self.crawl_timeline(start_date_obj=start_datetime_obj, end_date_obj=end_datetime_obj)
-              
-# with open("C:\\Users\\hamid\\OneDrive\\Documents\\credential.txt", 'r', encoding='utf-8') as f:     
-#     password = f.read()
 
 if __name__ == "__main__":
     scraper = FacebookProfileScraper('hrk.sahil', "password", operating_system="UBUNTU")         
