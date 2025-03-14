@@ -8,3 +8,6 @@ cd "C:\Program Files\Google\Chrome\Application"
 chrome.exe --remote-debugging-port=9222
 
 chrome.exe --remote-debugging-port=9222 --user-data-dir="C:\selenum\ChromeProfile"
+
+source .venv/bin/activate
+google-chrome --remote-debugging-port=9222 --user-data-dir="$HOME/selenium/ChromeProfile"

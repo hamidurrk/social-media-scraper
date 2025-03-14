@@ -296,6 +296,11 @@ class FacebookProfileScraper:
                     error_count = 0
                     post_date = None
                     post_date_obj = None
+                    
+                    if i > 200:
+                        bot.refresh()
+                        break
+
                     wrt = "Post no: " + str(i) + " "
                     print(wrt.center(70, "-"))
                     
