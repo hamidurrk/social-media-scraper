@@ -199,6 +199,7 @@ class FacebookProfileScraper:
                 else:
                     reaction, count = aria_label.split(", ")
                     reactions[reaction] = int_from_string(count)
+                    # print(reactions)
         if reactions["All"] != sum(reactions.values())-reactions["All"]:
             print("Reactions count mismatch")
             wait = WebDriverWait(bot, 1)
@@ -240,6 +241,7 @@ class FacebookProfileScraper:
         # close_button = wait.until(EC.element_to_be_clickable((By.XPATH, "//div[@aria-label='Close' and @role='button']")))
         # close_button.click()
         bot.find_element_by_xpath(react_pop_up_close).click()
+        # print("After conversion:", reactions)
         return reactions
 
     def search_keyword_in_html(self, keyword, html):

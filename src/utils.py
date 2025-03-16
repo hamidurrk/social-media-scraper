@@ -23,7 +23,8 @@ def is_firefox_running():
     return False
 
 def int_from_string(input_string):
-    input_string = input_string.replace(',', '')  # remove commas
+    # print("Before conversion:", input_string)
+    input_string = input_string.replace(',', '') 
     match = re.search(r'(\d+(?:\.\d+)?)(K|M|B)?', input_string)
     if match:
         value = float(match.group(1))
