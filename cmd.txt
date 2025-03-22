@@ -11,3 +11,5 @@ chrome.exe --remote-debugging-port=9222 --user-data-dir="C:\selenum\ChromeProfil
 
 source .venv/bin/activate
 google-chrome --remote-debugging-port=9222 --user-data-dir="$HOME/selenium/ChromeProfile"
+
+flatpak run com.google.Chrome --remote-debugging-port=9222 --user-data-dir="$HOME/selenium/ChromeProfile"

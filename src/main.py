@@ -180,9 +180,11 @@ class FacebookProfileScraper:
         except Exception as e:
             print("React pop-up not found: ", str(e))
             print("Getting the total reacts from the main page")
-            wait = WebDriverWait(bot, 5)
-            close_button = wait.until(EC.element_to_be_clickable((By.XPATH, "//div[@aria-label='Close' and @role='button']")))
-            close_button.click()
+            # wait = WebDriverWait(bot, 5)
+            random_wait(3)
+            # close_button = wait.until(EC.element_to_be_clickable((By.XPATH, "//div[@aria-label='Close' and @role='button']")))
+            # close_button.click()
+            bot.find_element_by_xpath(react_pop_up_close).click()
             random_wait(2)
             reactions["All"] = int_from_string(react_str_element.text)
             return reactions
