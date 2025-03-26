@@ -182,9 +182,9 @@ class FacebookProfileScraper:
             print("Getting the total reacts from the main page")
             # wait = WebDriverWait(bot, 5)
             random_wait(3)
-            # close_button = wait.until(EC.element_to_be_clickable((By.XPATH, "//div[@aria-label='Close' and @role='button']")))
-            # close_button.click()
-            bot.find_element_by_xpath(react_pop_up_close).click()
+            close_button = wait.until(EC.element_to_be_clickable((By.XPATH, "//div[@aria-label='Close' and @role='button']")))
+            close_button.click()
+            # bot.find_element_by_xpath(react_pop_up_close).click()
             random_wait(2)
             reactions["All"] = int_from_string(react_str_element.text)
             return reactions
@@ -538,7 +538,7 @@ class FacebookProfileScraper:
         
     def main(self, year, month, day):
         start_datetime_obj = parse_facebook_date(get_last_datetime("indiannationalcongress"))
-        # start_datetime_obj = datetime(2025, 1, 3)
+        start_datetime_obj = datetime(2017, 2, 20)
         end_datetime_obj = datetime(year, month, day) - timedelta(1)
         # name, url = fetch_new_profile("name"), fetch_new_profile("facebook")
         name, url = "Indian National Congress", "https://www.facebook.com/IndianNationalCongress"
