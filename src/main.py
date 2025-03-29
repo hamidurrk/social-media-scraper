@@ -38,9 +38,6 @@ class FacebookProfileScraper:
                 folder = os.path.dirname(chrome_install)
                 chromedriver_path = os.path.join(folder, "chromedriver.exe")
                 self.bot = webdriver.Chrome(executable_path=chromedriver_path, options=chrome_options)
-        
-        # self.bot.set_window_position(0, 0) 
-        # self.bot.set_window_size(960, 1043)
         sys.stdout.flush()
         gen_prompt("FacebookProfileScraper initialized", char="#")
         print("\n")
@@ -180,7 +177,6 @@ class FacebookProfileScraper:
         except Exception as e:
             print("React pop-up not found: ", str(e))
             print("Getting the total reacts from the main page")
-            # wait = WebDriverWait(bot, 5)
             random_wait(3)
             wait = WebDriverWait(bot, 1)
             close_button = wait.until(EC.element_to_be_clickable((By.XPATH, "//div[@aria-label='Close' and @role='button']")))
@@ -202,7 +198,6 @@ class FacebookProfileScraper:
                 else:
                     reaction, count = aria_label.split(", ")
                     reactions[reaction] = int_from_string(count)
-                    # print(reactions)
         if reactions["All"] != sum(reactions.values())-reactions["All"]:
             print("Reactions count mismatch")
             wait = WebDriverWait(bot, 1)
@@ -244,7 +239,6 @@ class FacebookProfileScraper:
         # close_button = wait.until(EC.element_to_be_clickable((By.XPATH, "//div[@aria-label='Close' and @role='button']")))
         # close_button.click()
         bot.find_element_by_xpath(react_pop_up_close).click()
-        # print("After conversion:", reactions)
         return reactions
 
     def search_keyword_in_html(self, keyword, html):
@@ -288,7 +282,6 @@ class FacebookProfileScraper:
             current_date_obj = start_date_obj - timedelta(n)
             print(current_date_obj.year, current_date_obj.strftime("%B"), current_date_obj.day)
                              
-            # filter_button = "/html/body/div[1]/div/div/div[1]/div/div[3]/div/div/div[1]/div[1]/div/div/div[4]/div[2]/div/div[2]/div[2]/div/div/div/div[2]/div/div/div"
             self.post_filter(filter_button, current_date_obj.year, current_date_obj.strftime("%B"), current_date_obj.day)
             random_wait(8)
             
@@ -318,13 +311,11 @@ class FacebookProfileScraper:
                     # print(j, i)
                     post_box = f"/html/body/div[1]/div/div[1]/div/div[3]/div/div/div[1]/div[1]/div/div/div[4]/div[2]/div/div[2]/div[{j}]/div[{i}]/div/div/div/div/div/div/div/div/div/div/div/div[13]/div/div/div[3]/div[1]/div"
                     anchor_scroll = f"/html/body/div[1]/div/div[1]/div/div[3]/div/div/div[1]/div[1]/div/div/div[4]/div[2]/div/div[2]/div[{j}]/div[{i}]/div/div/div/div/div/div/div/div/div/div/div/div[13]/div/div/div[2]/div/div[3]/div/div"
-                                    #  "/html/body/div[1]/div/div[1]/div/div[3]/div/div/div[1]/div[1]/div/div/div[4]/div[2]/div/div[2]/div[3]/div[1]    /div/div/div/div/div/div/div/div/div/div/div/div[13]/div/div/div[2]/div/div[3]/div/div"
                     date_hover_element = f"/html/body/div[1]/div/div[1]/div/div[3]/div/div/div[1]/div[1]/div/div/div[4]/div[2]/div/div[2]/div[{j}]/div[{i}]/div/div/div/div/div/div/div/div/div/div/div/div[13]/div/div/div[2]/div/div[2]/div/div[2]/span/div/span[1]/span"
                     date_hover_box = f"/html/body/div[1]/div/div[1]/div/div[3]/div/div/div[2]/div"
                     img_box = f"/html/body/div[1]/div/div[1]/div/div[3]/div/div/div[1]/div[1]/div/div/div[4]/div[2]/div/div[2]/div[{j}]/div[{i}]/div/div/div/div/div/div/div/div/div/div/div/div[13]/div/div/div[3]/div/div[1]/a/div[1]/div/div/div/img"
                     img_box_2 = f"/html/body/div[1]/div/div[1]/div/div[3]/div/div/div[1]/div[1]/div/div/div[4]/div[2]/div/div[2]/div[{j}]/div[{i}]/div/div/div/div/div/div/div/div/div/div/div/div[13]/div/div/div[3]/div[2]/div[1]/div/div/div"
                     react_str = f"/html/body/div[1]/div/div[1]/div/div[3]/div/div/div[1]/div[1]/div/div/div[4]/div[2]/div/div[2]/div[{j}]/div[{i}]/div/div/div/div/div/div/div/div/div/div/div/div[13]/div/div/div[4]/div/div/div[1]/div/div[1]/div/div[1]/div/span/div/span[2]/span/span"
-                                #  "/html/body/div[1]/div/div[1]/div/div[3]/div/div/div[1]/div[1]/div/div/div[4]/div[2]/div/div[2]/div[3]/div[1]/div/div/div/div/div/div/div/div/div/div/div/div[13]/div/div/div[4]/div/div/div[1]/div/div[1]/div/div[1]/div/span/div/span[2]/span/span"
                     comment_share_parent = f"/html/body/div[1]/div/div[1]/div/div[3]/div/div/div[1]/div[1]/div/div/div[4]/div[2]/div/div[2]/div[{j}]/div[{i}]/div/div/div/div/div/div/div/div/div/div/div/div[13]/div/div/div[4]/div/div/div[1]/div/div[1]"
                     comment_str = f"/html/body/div[1]/div/div[1]/div/div[3]/div/div/div[1]/div[1]/div/div/div[4]/div[2]/div/div[2]/div[{j}]/div[{i}]/div/div/div/div/div/div/div/div/div/div/div/div[13]/div/div/div[4]/div/div/div/div/div[1]/div/div[2]/div[2]/span/div/span/span"
                     share_str = f"/html/body/div[1]/div/div[1]/div/div[3]/div/div/div[1]/div[1]/div/div/div[4]/div[2]/div/div[2]/div[{j}]/div[{i}]/div/div/div/div/div/div/div/div/div/div/div/div[13]/div/div/div[4]/div/div/div/div/div[1]/div/div[2]/div[3]/span/div/span/span"
@@ -523,8 +514,6 @@ class FacebookProfileScraper:
                             current_date_obj = start_date_obj - timedelta(n)
                             print(current_date_obj.year, current_date_obj.strftime("%B"), current_date_obj.day)
                                             
-                            # filter_button = "/html/body/div[1]/div/div/div[1]/div/div[3]/div/div/div[1]/div[1]/div/div/div[4]/div[2]/div/div[2]/div[2]/div/div/div/div[2]/div/div/div"
-                            # filter_button = "/html/body/div[1]/div/div[1]/div/div[3]/div/div/div[1]/div[1]/div/div/div[4]/div[2]/div/div[2]/div[2]/div/div/div/div[2]/div/div/div"
                             self.post_filter(filter_button, current_date_obj.year, current_date_obj.strftime("%B"), current_date_obj.day)
                             random_wait(2)
                             
