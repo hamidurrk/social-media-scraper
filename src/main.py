@@ -294,6 +294,7 @@ class FacebookProfileScraper:
             
             i = 0
             close_button_exception = True
+            reel_exception_count = 0
             while True:
                 try:
                     i += 1
@@ -302,9 +303,10 @@ class FacebookProfileScraper:
                     post_date = None
                     post_date_obj = None
                     
+                    random_wait(8)
+
                     if i > 200:
                         bot.refresh()
-                        break
 
                     wrt = "Post no: " + str(i) + " "
                     print(wrt.center(70, "-"))
@@ -339,6 +341,10 @@ class FacebookProfileScraper:
                     except:
                         self.perform_pagedown(1)
                         print("No anchor found. Probably a reel post.")
+                        reel_exception_count += 1
+                        if reel_exception_count >= 20:
+                            bot.refresh()
+                            i = 0
                         continue
                     
                     post_date, post_date_obj = self.hover_date_element(date_hover_element, date_hover_box)
@@ -539,7 +545,7 @@ class FacebookProfileScraper:
         
     def main(self, year, month, day):
         start_datetime_obj = parse_facebook_date(get_last_datetime("indiannationalcongress"))
-        start_datetime_obj = datetime(2017, 2, 20)
+        # start_datetime_obj = datetime(2017, 2, 20)
         end_datetime_obj = datetime(year, month, day) - timedelta(1)
         # name, url = fetch_new_profile("name"), fetch_new_profile("facebook")
         name, url = "Indian National Congress", "https://www.facebook.com/IndianNationalCongress"
