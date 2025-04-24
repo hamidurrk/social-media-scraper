@@ -372,6 +372,62 @@ def print_duplicate_rows(table_name):
     for row in duplicates:
         print(row)
 
+
+def copy_special_rows_to_new_table(source_table, target_table):
+    c = conn.cursor()
+    
+    # Create the new table with the same structure as the source table
+    c.execute(f"""
+        CREATE TABLE IF NOT EXISTS {target_table} AS
+        SELECT *
+        FROM {source_table}
+        WHERE 0; -- Create table with no data
+    """)
+    
+    # Insert rows where like = 0 and love = 0 into the new table
+    c.execute(f"""
+        INSERT INTO {target_table}
+        SELECT *
+        FROM {source_table}
+        WHERE like = 0 AND love = 0;
+    """)
+    
+    conn.commit()
+    print(f"Rows where like = 0 and love = 0 have been copied to the table '{target_table}' successfully.")
+    
+def update_like_values(table_name):
+    c = conn.cursor()
+    
+    # Select rows where like = 0
+    c.execute(f"SELECT id, all_reacts, love, care, haha, sad, angry FROM {table_name} WHERE like = 0")
+    rows = c.fetchall()
+    
+    if rows:
+        # Process only the first row for debugging
+        row = rows[0]
+        row_id = row[0]
+        all_reacts = row[1]
+        love = row[2]
+        care = row[3]
+        haha = row[4]
+        sad = row[5]
+        angry = row[6]
+        
+        # Calculate the new like value
+        new_like = all_reacts - (love + care + haha + sad + angry)
+        
+        # Debug prints
+        print(f"Processing row ID: {row_id}")
+        print(f"all_reacts: {all_reacts}, love: {love}, care: {care}, haha: {haha}, sad: {sad}, angry: {angry}")
+        print(f"Calculated like value: {new_like}")
+        
+        # Update the like value in the database
+        c.execute(f"UPDATE {table_name} SET like = ? WHERE id = ?", (new_like, row_id))
+        conn.commit()
+        print(f"Row ID {row_id} updated successfully.")
+    else:
+        print("No rows found where like = 0.")
+        
 if __name__ == "__main__":
     # create_table()
     # drop_table("ipplist")
@@ -392,4 +448,5 @@ if __name__ == "__main__":
     # update_id_column("bharatiyajanatapartybjp")
     # print_duplicate_rows("bharatiyajanatapartybjp")
     # remove_rows_greater_than_id("bharatiyajanatapartybjp", 35092)
+    # copy_special_rows_to_new_table("indiannationalcongress", "indiannationalcongress_special")
     pass
