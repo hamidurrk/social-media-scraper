@@ -403,28 +403,28 @@ def update_like_values(table_name):
     rows = c.fetchall()
     
     if rows:
-        # Process only the first row for debugging
-        row = rows[0]
-        row_id = row[0]
-        all_reacts = row[1]
-        love = row[2]
-        care = row[3]
-        haha = row[4]
-        sad = row[5]
-        angry = row[6]
-        
-        # Calculate the new like value
-        new_like = all_reacts - (love + care + haha + sad + angry)
-        
-        # Debug prints
-        print(f"Processing row ID: {row_id}")
-        print(f"all_reacts: {all_reacts}, love: {love}, care: {care}, haha: {haha}, sad: {sad}, angry: {angry}")
-        print(f"Calculated like value: {new_like}")
-        
-        # Update the like value in the database
-        c.execute(f"UPDATE {table_name} SET like = ? WHERE id = ?", (new_like, row_id))
-        conn.commit()
-        print(f"Row ID {row_id} updated successfully.")
+        for row in rows:
+            row_id = row[0]
+            all_reacts = row[1]
+            love = row[2]
+            care = row[3]
+            haha = row[4]
+            sad = row[5]
+            angry = row[6]
+            if not all_reacts:
+                continue
+            # Calculate the new like value
+            new_like = all_reacts - (love + care + haha + sad + angry)
+            
+            # Debug prints
+            print(f"all_reacts: {all_reacts}, love: {love}, care: {care}, haha: {haha}, sad: {sad}, angry: {angry}")
+            print(f"Processing row ID: {row_id}")
+            print(f"Calculated like value: {new_like}")
+            
+            # Update the like value in the database
+            c.execute(f"UPDATE {table_name} SET like = ? WHERE id = ?", (new_like, row_id))
+            conn.commit()
+            print(f"Row ID {row_id} updated successfully.")
     else:
         print("No rows found where like = 0.")
         
@@ -443,10 +443,11 @@ if __name__ == "__main__":
     # get_last_datetime("bharatiyajanatapartybjp")
     # print(check_if_datetime_exists("bharatiyajanatapartybjp", "Friday 16 June 2023 at 15:29"))
     # remove_rows_below_value_threshold_of_column("bharatiyajanatapartybjp", "all_reacts", 1)
-    # empty_datetime_refactor("bharatiyajanatapartybjp")
+    # empty_datetime_refactor("indiannationalcongress")
     # non_empty_datetime_refactor("bharatiyajanatapartybjp")
     # update_id_column("bharatiyajanatapartybjp")
     # print_duplicate_rows("bharatiyajanatapartybjp")
     # remove_rows_greater_than_id("bharatiyajanatapartybjp", 35092)
     # copy_special_rows_to_new_table("indiannationalcongress", "indiannationalcongress_special")
+    # update_like_values("indiannationalcongress")
     pass

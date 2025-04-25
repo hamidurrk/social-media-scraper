@@ -46,6 +46,37 @@ def frquency_of_post_per_day(table_name):
     plt.xticks(rotation=90)
     plt.show()
     
+def compare_frequency_of_posts(table1, table2):
+    # Fetch data for the first table
+    df1 = pd.read_sql_query(f"SELECT datetime FROM {table1}", conn)
+    df1['datetime'] = pd.to_datetime(df1['datetime'])
+    df1['date'] = df1['datetime'].dt.date
+    daily_counts1 = df1.groupby('date').size().reset_index(name='count')
+    daily_counts1['table'] = table1
+
+    # Fetch data for the second table
+    df2 = pd.read_sql_query(f"SELECT datetime FROM {table2}", conn)
+    df2['datetime'] = pd.to_datetime(df2['datetime'])
+    df2['date'] = df2['datetime'].dt.date
+    daily_counts2 = df2.groupby('date').size().reset_index(name='count')
+    daily_counts2['table'] = table2
+
+    # Combine the data for both tables
+    combined_df = pd.concat([daily_counts1, daily_counts2])
+
+    # Plot the data
+    plt.figure(figsize=(12, 8))
+    for table, group in combined_df.groupby('table'):
+        plt.plot(group['date'], group['count'], label=table)
+
+    plt.xlabel('Date')
+    plt.ylabel('Number of Posts')
+    plt.title('Frequency of Posts per Day (Comparison)')
+    plt.legend()
+    plt.xticks(rotation=90)
+    plt.tight_layout()
+    plt.show()
 if __name__ == "__main__":
     # show_react("bharatiyajanatapartybjp")
-    frquency_of_post_per_day("bharatiyajanatapartybjp")
+    # frquency_of_post_per_day("bharatiyajanatapartybjp")
+    compare_frequency_of_posts("bharatiyajanatapartybjp", "indiannationalcongress")
