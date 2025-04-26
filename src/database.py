@@ -376,7 +376,6 @@ def print_duplicate_rows(table_name):
 def copy_special_rows_to_new_table(source_table, target_table):
     c = conn.cursor()
     
-    # Create the new table with the same structure as the source table
     c.execute(f"""
         CREATE TABLE IF NOT EXISTS {target_table} AS
         SELECT *
@@ -384,7 +383,6 @@ def copy_special_rows_to_new_table(source_table, target_table):
         WHERE 0; -- Create table with no data
     """)
     
-    # Insert rows where like = 0 and love = 0 into the new table
     c.execute(f"""
         INSERT INTO {target_table}
         SELECT *
@@ -398,7 +396,6 @@ def copy_special_rows_to_new_table(source_table, target_table):
 def update_like_values(table_name):
     c = conn.cursor()
     
-    # Select rows where like = 0
     c.execute(f"SELECT id, all_reacts, love, care, haha, sad, angry FROM {table_name} WHERE like = 0")
     rows = c.fetchall()
     
@@ -413,15 +410,12 @@ def update_like_values(table_name):
             angry = row[6]
             if not all_reacts:
                 continue
-            # Calculate the new like value
             new_like = all_reacts - (love + care + haha + sad + angry)
             
-            # Debug prints
             print(f"all_reacts: {all_reacts}, love: {love}, care: {care}, haha: {haha}, sad: {sad}, angry: {angry}")
             print(f"Processing row ID: {row_id}")
             print(f"Calculated like value: {new_like}")
             
-            # Update the like value in the database
             c.execute(f"UPDATE {table_name} SET like = ? WHERE id = ?", (new_like, row_id))
             conn.commit()
             print(f"Row ID {row_id} updated successfully.")
