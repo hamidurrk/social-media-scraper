@@ -179,8 +179,8 @@ def loading(i, total):
     sys.stdout.flush()
 
 def random_wait(t):
-    min_time = t - 1
-    max_time = t + 2
+    min_time = t - 3
+    max_time = t + 3
     if min_time < 0:
         min_time = 0.1
     time.sleep(random.uniform(min_time, max_time))
